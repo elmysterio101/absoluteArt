@@ -69,7 +69,7 @@ function agregarCapa() {
 
 }
 
-
+// comentario para ver si cambia en git y github
 
 function obtenerParametros() {
     return {
