@@ -20,6 +20,7 @@ function revertirTrazo() {
         absoluteArt.herramientasCanvas.vaciar(ctx)
         absoluteArt.lienzo.capas[absoluteArt.lienzo.capaActiva].historial.revertirTrazo()
         absoluteArt.lienzo.renderizarCapas(ctx)
+        actualizarCanvasEnPantalla(absoluteArt.lienzo.capaActiva);
     }
 }
 function recuperarTrazo() {
@@ -27,6 +28,7 @@ function recuperarTrazo() {
         absoluteArt.herramientasCanvas.vaciar(ctx)
         absoluteArt.lienzo.capas[absoluteArt.lienzo.capaActiva].historial.recuperarTrazo()
         absoluteArt.lienzo.renderizarCapas(ctx)
+        actualizarCanvasEnPantalla(absoluteArt.lienzo.capaActiva);
     }
 }
 
@@ -59,17 +61,47 @@ let opacidadPrincipal = 1;
 let opacidadSecundaria = 1;
 let recorrido = [];
 
-function listarCapas(idLista) {
-    const lista = document.getElementById(idLista);
-    const capas = absoluteArt.lienzo.capas
-    console.log(capas, lista)
+const listaCapas = document.getElementById('listaCapas');
+
+function listarCapas() {
+
+    const i = absoluteArt.lienzo.capas.length - 1;
+        const htmlCapa = `
+        <div class="representacionCapa" id="contenedorCapa${i}">
+            <input type="radio" name="capa" id="capa${i}" value="${i}">
+            <label class="labelCapa" for="capa${i}">
+                <canvas id="canvasCapa${i}" class="CanvasRepresentacionCapa"></canvas>
+            </label>
+            <button type="button" onclick="editarCapa('capa${i}')">
+                Editar Capa ${i}
+            </button>
+        </div>
+    `;
+        listaCapas.insertAdjacentHTML('afterbegin', htmlCapa);
+        document.getElementById('canvasCapa' + i).click();
+
 }
+
+listarCapas();
 
 function agregarCapa() {
-
+    absoluteArt.lienzo.agregarCapa();
+    listarCapas()
 }
 
-// comentario para ver si cambia en git y github
+function cambiarCapaActual(event) {
+    const nuevaCapaActiva = Number(event.target.value)
+    absoluteArt.lienzo.capaActiva = nuevaCapaActiva;
+}
+
+function editarCapa() {
+    console.log(" pa despue")
+}
+
+function actualizarCanvasEnPantalla(id) {
+    const ctxCanvas = document.getElementById(('canvasCapa' + id)).getContext('2d')
+    absoluteArt.lienzo.renderizarUnaCapa(absoluteArt.lienzo.capaActiva, ctxCanvas);
+}
 
 function obtenerParametros() {
     return {
@@ -89,6 +121,7 @@ function obtenerParametros() {
 }
 let parametros = obtenerParametros();
 let clickeando = false;
+
 canvas.addEventListener('mousedown', (e) => {
 
     clickeando = true;
@@ -122,5 +155,6 @@ canvas.addEventListener('mouseup', (e) => {
     recorrido.push(absoluteArt.utiles.adaptarCordCanvas(e.clientX, e.clientY, ctx))
     parametros = obtenerParametros();
     absoluteArt.lienzo.capas[absoluteArt.lienzo.capaActiva].historial.guardarHistorial(parametros);
+    actualizarCanvasEnPantalla(absoluteArt.lienzo.capaActiva);
 });
 

@@ -9,6 +9,28 @@
 </head>
 
 <body>
+    <div class="configuracionCapa" id="">
+        <div class="opacidadCapa">
+            <div class="configCapa">
+                <div class="atributoCapa">
+                    Editable
+                    <input type="checkbox" name="" id="" checked>
+                </div>
+                <div class="atributoCapa">
+                    visible
+                <input type="checkbox" name="" id="" checked>
+                </div>
+                
+                <div class="atributoCapa">
+                    opacidad
+                    <input type="number" name="" id="" max="1" min="0" step="0.1">
+                </div>
+            </div>
+            <div class="accionesCapa">
+                <button type="button"></button>
+            </div>
+        </div>
+    </div>
     <div class="seccionArriba">
         <div class="barraMenu">
             <button type="button" id="retrocederTrazo" onclick="revertirTrazo()">atras</button>
@@ -32,36 +54,42 @@
             </select>
             <div class="color">
                 <p>colorPrincipal</p>
-                <input type="color" name="" id="colorPrincipal" onchange=" colorPrincipal = hexToRgb(document.getElementById('colorPrincipal').value)">
+                <input type="color" name="" id="colorPrincipal"
+                    onchange=" colorPrincipal = hexToRgb(document.getElementById('colorPrincipal').value)">
             </div>
 
             <div class="color">
                 <p>colorSecundario</p>
-                <input type="color" name="" id="colorSecundario" onchange=" colorSecundario =  hexToRgb(document.getElementById('colorSecundario').value)">
+                <input type="color" name="" id="colorSecundario"
+                    onchange=" colorSecundario =  hexToRgb(document.getElementById('colorSecundario').value)">
             </div>
         </div>
     </div>
 
     <section class="lienzo">
         <div class="seccionIzquierda">
+
             <div class="configuracionLapizFondo">
                 <div class="rango">
                     <p>grosor</p>
-                    <input type="range" name="" min="1" value="1" max="200" step="1" id="grosor" oninput="grosor = document.getElementById('grosor').value,
+                    <input type="range" name="" min="1" value="1" max="200" step="1" id="grosor"
+                        oninput="grosor = document.getElementById('grosor').value,
                                                                                                          document.getElementById('cartelGrosor').innerHTML = grosor">
                     <p id="cartelGrosor">1</p>
                 </div>
 
                 <div class="rango">
                     <p>opprin</p>
-                    <input type="range" name="" min="0" value="1" max="1" step="0.01" id="opacidadPrincipal" oninput="opacidadPrincipal = document.getElementById('opacidadPrincipal').value,
+                    <input type="range" name="" min="0" value="1" max="1" step="0.01" id="opacidadPrincipal"
+                        oninput="opacidadPrincipal = document.getElementById('opacidadPrincipal').value,
                                                                                                          document.getElementById('cartelOpacPrin').innerHTML = opacidadPrincipal">
                     <p id="cartelOpacPrin">1</p>
                 </div>
 
                 <div class="rango">
                     <p>opsecu</p>
-                    <input type="range" name="" min="0" value="1" max="1" step="0.01" id="opacidadSecundaria" oninput="opacidadSecundaria = document.getElementById('opacidadSecundaria').value,
+                    <input type="range" name="" min="0" value="1" max="1" step="0.01" id="opacidadSecundaria"
+                        oninput="opacidadSecundaria = document.getElementById('opacidadSecundaria').value,
                                                                                                          document.getElementById('cartelOpacSecu').innerHTML = opacidadPrincipal">
                     <p id="cartelOpacSecu">1</p>
                 </div>
@@ -72,21 +100,13 @@
 
         <canvas id="canvasPrincipal">
 
-        </canvas>
+        </canvas> <input type="checkbox" name="" id="">
 
         <div class="seccionDerecha">
-            <button type="button" id="agregarCapas" onclick="listarCapas('agregarCapas')">agregar capa</button>
-            <form id="listaCapas">
-                <div class="representacionCapa">
-                    <input type="radio" name="capa" id="capa0" value="0">
-                    <label class="labelCapa" for="capa0">
-                        <canvas id="canvasCapa0" class="CanvasRepresentacionCapa"></canvas>
-                    </label>
+            <button type="button" id="agregarCapas" onclick="agregarCapa()">agregar capa</button>
+            <form id="listaCapas" onchange="cambiarCapaActual(event)">
 
-                    <button type="button" onclick="editarCapa('capa0')">
-                        Editar Capa
-                    </button>
-                </div>
+
             </form>
             <div class="configurarCapas">
 

@@ -73,7 +73,6 @@ class historial { // convertirlo a clase y agregar objeto capas ,  cada capa es 
         if (this.debeGuardarCaptura(conf)) {
             this.guardarCaptura(conf);
         }
-
     }
     guardarTrazo(trazo) {
         this.trazosRevertidos = [];
@@ -82,13 +81,18 @@ class historial { // convertirlo a clase y agregar objeto capas ,  cada capa es 
         } else {
             this.historialTrazos.push(absoluteArt.utiles.borrarRecorridoIntermedio(trazo))
         }
+        console.log(trazo)
+        console.log(this.ctx)
+        absoluteArt[trazo.contexto.tipoHerramienta]?.[trazo.contexto.categoriaHerramienta]?.[trazo.contexto.herramienta](trazo, this.ctx)
+            ?? absoluteArt[trazo.contexto.tipoHerramienta]?.[trazo.contexto.herramienta]?.(trazo, this.ctx);
+
     }
     trazosDesdeUltimaCaptura() { //
         let cantidadTrazos = this.historialTrazos.length;
         if (this.historialCapturas.length > 0) {
             cantidadTrazos = ((this.historialTrazos.length - 1) - (this.historialCapturas[this.historialCapturas.length - 1].indice) + 1);
         }
-        return cantidadTrazos ;
+        return cantidadTrazos;
     }
     guardarCaptura(conf) {
         if (this.historialCapturas.length - 1 >= this.limiteCapturasHistorial) {
@@ -143,7 +147,7 @@ absoluteArt.lienzo = {
             this.configuracionCapas.limiteCapturasHistorial,
             this.configuracionCapas.altoCanvas,
             this.configuracionCapas.anchoCanvas)
-        this.capas.push({ visible: true, editable: true, historial: historialCapa })
+        this.capas.push({ visible: true ,editable: true, opacidad : 1 ,historial: historialCapa })
     },
     renderizarCapas(ctx) {
         for (const capa of this.capas) {
@@ -151,7 +155,28 @@ absoluteArt.lienzo = {
                 ctx.drawImage(capa.historial.canvas, 0, 0);
             }
         }
+    },
+    renderizarUnaCapa(indiceCapa, ctx) {
+        if (this.capas[indiceCapa].visible) {
+            absoluteArt.herramientasCanvas.vaciar(ctx)
+            ctx.drawImage(this.capas[indiceCapa].historial.canvas, 0, 0)
+        }
+    },
+
+
+    moverCapa(indiceCapa,nuevoIndice){
+
+    },
+    eliminarCapa(indiceCapa){
+
+    },
+    duplicarCapa(indiceCapa){
+
+    },
+    fusionarCapas(){
+
     }
+
 }
 
 absoluteArt.herramientasCanvas = { // secion de herramientas q actuan con el canvas sin ser dibujos manuales o figuras
