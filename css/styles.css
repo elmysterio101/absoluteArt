@@ -1,0 +1,170 @@
+:root {
+    --padding: 1.5vw;
+}
+
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100vh;
+    width: 100vw;
+}
+
+.seccionArriba {
+    height: fit-content;
+    width: fit-content;
+    display: flex;
+    flex-direction: column;
+}
+
+.barraMenu,
+.barraEstatus {
+    width: 100vw;
+    height: 5vh;
+    background-color: red;
+}
+
+.barraHerramientas {
+    background-color: blue;
+    width: 100vw;
+    height: 10vh;
+}
+
+.lienzo {
+    background-color: gray;
+    width: 100vw;
+    height: 80vh;
+    position: relative;
+}
+
+.seccionIzquierda {
+    width: fit-content;
+    height: 55vh;
+    background-color: darkblue;
+    position: absolute;
+    bottom: 0;
+    left: var(--padding);
+    top: 50%;
+    z-index: 10;
+    transform: translateY(-50%);
+}
+
+.configuracionLapizFondo {
+    height: 100%;
+    width: fit-content;
+    display: flex;
+    gap: calc(var(--padding) / 2);
+}
+
+.seccionDerecha {
+    height: calc(80vh - var(--padding));
+    background-color: lightblue;
+    right: var(--padding);
+    height: calc(100% - var(--padding));
+    width: 26vh;
+    position: absolute;
+    right: calc(var(--padding) / 2);
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+}
+
+#canvasPrincipal {
+    height: 360px;
+    width: 640px;
+    background-color: white;
+    position: absolute;
+    top: 50%;
+    right: 50%;
+    transform: translateY(-50%) translateX(50%);
+}
+
+#agregarCapas {
+    width: 100%;
+    height: 8%
+}
+
+#listaCapas {
+    background-color: red;
+    height: 82%;
+    width: 80%;
+    position: absolute;
+    top: 8%;
+    right: 50%;
+    transform: translateX(50%);
+}
+
+.configurarCapas {
+    width: 100%;
+    height: 10%;
+    background-color: aquamarine;
+    position: absolute;
+    bottom: 0;
+}
+
+.barraHerramientas {
+    display: flex;
+    gap: 6vh;
+    justify-content: center;
+    align-items: center;
+}
+
+select {
+    height: 70%;
+    width: 15vw;
+}
+
+.color {
+    background-color: lightcyan;
+}
+
+.rango {
+    background-color: darkviolet;
+    width: 7.2vh;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 4vh;
+}
+
+.rango input {
+    transform: rotateZ(-90deg) translateY(-16.5vh);
+    width: 40vh;
+}
+
+.representacionCapa {
+    background-color: red;
+    width: 100%;
+    height: 14vh;
+}
+
+.labelCapa {
+    background-color: blue;
+    width: 100%;
+    height: fit-content;
+}
+
+.CanvasRepresentacionCapa {
+    background-color: blue;
+    width: 100%;
+    aspect-ratio: 16/9;
+}
+
+.representacionCapa button {
+    width: 100%;
+    height: 20%;
+}
+
+input[type="radio"] {
+    display: none;
+}
