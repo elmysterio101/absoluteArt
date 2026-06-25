@@ -14,30 +14,23 @@ return{
         }
     }
 */
-
 // clases ,  por ahora solo clase historial
 /*
-    constructor(lienzo , frecuenciaCapturas , trayectoMuyLargo , limiteCapturasHistorial , anchoCanvas, altoCanvas)  {
-        this.canvas = document.createElement('canvas')
-        this.canvas.height = altoCanvas;
-        this.canvas.width = anchoCanvas;
-        this.ctx = this.canvas.getContext('2d');
-        this.frecuenciaTrazos = frecuenciaCapturas ;// de base son 10
-        this.trayectoMuyLargo = trayectoMuyLargo; // de base son 1k
-        this.limiteCapturasHistorial = limiteCapturasHistorial; // de base son 10
+constructor(lienzo , frecuenciaCapturas , trayectoMuyLargo , limiteCapturasHistorial , anchoCanvas, altoCanvas)  {
+    this.canvas = document.createElement('canvas')
+    this.canvas.height = altoCanvas;
+    this.canvas.width = anchoCanvas;
+    this.ctx = this.canvas.getContext('2d');
+    this.frecuenciaTrazos = frecuenciaCapturas ;// de base son 10
+    this.trayectoMuyLargo = trayectoMuyLargo; // de base son 1k
+    this.limiteCapturasHistorial = limiteCapturasHistorial; // de base son 10
     }
 */
 
 const absoluteArt = {} // heramientas
 
 class historial { // convertirlo a clase y agregar objeto capas ,  cada capa es enrealidad 1 historial , luego ya veo como manejarle dentro
-    canvas = undefined;
-    ctx = undefined;
-    constructor(frecuenciaCapturas, trayectoMuyLargo, limiteCapturasHistorial, anchoCanvas, altoCanvas) {
-        this.canvas = document.createElement('canvas')
-        this.canvas.height = altoCanvas;
-        this.canvas.width = anchoCanvas;
-        this.ctx = this.canvas.getContext('2d');
+    constructor(frecuenciaCapturas, trayectoMuyLargo, limiteCapturasHistorial,) {
         this.frecuenciaTrazos = frecuenciaCapturas;// de base son 10
         this.trayectoMuyLargo = trayectoMuyLargo; // de base son 1k
         this.limiteCapturasHistorial = limiteCapturasHistorial; // de base son 10
@@ -46,9 +39,9 @@ class historial { // convertirlo a clase y agregar objeto capas ,  cada capa es 
     historialTrazos = [];
     historialCapturas = []; // {captura:, indice:}
 
-    revertirTrazo() {
+    revertirTrazo(ctx) {
         if (this.historialTrazos.length > 0) {
-            absoluteArt.herramientasCanvas.vaciar(this.ctx);
+            absoluteArt.herramientasCanvas.vaciar(ctx);
             this.trazosRevertidos.push(this.historialTrazos[this.historialTrazos.length - 1])
             if (this.historialCapturas.length > 0) {
                 if (this.historialCapturas[this.historialCapturas.length - 1].indice === this.historialTrazos.length - 1) {
@@ -59,19 +52,22 @@ class historial { // convertirlo a clase y agregar objeto capas ,  cada capa es 
             this.pintarHistorial();
         }
     }
-    recuperarTrazo() {
+    recuperarTrazo(ctx) {
         if (this.trazosRevertidos.length > 0) {
             this.historialTrazos.push(this.trazosRevertidos[this.trazosRevertidos.length - 1])
             this.trazosRevertidos.pop();
             const ultTrazo = this.historialTrazos[this.historialTrazos.length - 1];
-            absoluteArt[ultTrazo.contexto.tipoHerramienta]?.[ultTrazo.contexto.categoriaHerramienta]?.[ultTrazo.contexto.herramienta](ultTrazo, this.ctx)
-                ?? absoluteArt[ultTrazo.contexto.tipoHerramienta]?.[ultTrazo.contexto.herramienta]?.(ultTrazo, this.ctx);
+            absoluteArt[ultTrazo.contexto.tipoHerramienta]?.[ultTrazo.contexto.categoriaHerramienta]?.[ultTrazo.contexto.herramienta](ultTrazo, ctx)
+                ?? absoluteArt[ultTrazo.contexto.tipoHerramienta]?.[ultTrazo.contexto.herramienta]?.(ultTrazo, ctx);
         }
     }
-    guardarHistorial(conf) {
+    guardarHistorial(conf, ctx) {
         this.guardarTrazo(conf);
         if (this.debeGuardarCaptura(conf)) {
             this.guardarCaptura(conf);
+        } else {
+            absoluteArt[conf.contexto.tipoHerramienta]?.[conf.contexto.categoriaHerramienta]?.[conf.contexto.herramienta](conf, ctx)
+                ?? absoluteArt[conf.contexto.tipoHerramienta]?.[conf.contexto.herramienta]?.(conf, ctx);
         }
     }
     guardarTrazo(trazo) {
@@ -81,11 +77,6 @@ class historial { // convertirlo a clase y agregar objeto capas ,  cada capa es 
         } else {
             this.historialTrazos.push(absoluteArt.utiles.borrarRecorridoIntermedio(trazo))
         }
-        console.log(trazo)
-        console.log(this.ctx)
-        absoluteArt[trazo.contexto.tipoHerramienta]?.[trazo.contexto.categoriaHerramienta]?.[trazo.contexto.herramienta](trazo, this.ctx)
-            ?? absoluteArt[trazo.contexto.tipoHerramienta]?.[trazo.contexto.herramienta]?.(trazo, this.ctx);
-
     }
     trazosDesdeUltimaCaptura() { //
         let cantidadTrazos = this.historialTrazos.length;
@@ -94,15 +85,15 @@ class historial { // convertirlo a clase y agregar objeto capas ,  cada capa es 
         }
         return cantidadTrazos;
     }
-    guardarCaptura(conf) {
+    guardarCaptura(conf, canvas) {
         if (this.historialCapturas.length - 1 >= this.limiteCapturasHistorial) {
             this.historialCapturas.splice(0, 1)
         }
         const canvasTrucho = document.createElement("canvas")
-        canvasTrucho.width = this.canvas.width
-        canvasTrucho.height = this.canvas.height
+        canvasTrucho.width = canvas.width
+        canvasTrucho.height = canvas.height
         const ctxTrucho = canvasTrucho.getContext('2d')
-        ctxTrucho.drawImage(this.canvas, 0, 0)
+        ctxTrucho.drawImage(canvas, 0, 0)
         this.historialCapturas.push({ captura: canvasTrucho, indice: this.historialTrazos.length - 1 })
     }
     debeGuardarCaptura(conf) {
@@ -114,11 +105,11 @@ class historial { // convertirlo a clase y agregar objeto capas ,  cada capa es 
         }
         return guardarEstado;
     }
-    pintarHistorial() {
+    pintarHistorial(ctx) {
         if (this.historialTrazos.length > 0) {
-            absoluteArt.herramientasCanvas.vaciar(this.ctx);
+            absoluteArt.herramientasCanvas.vaciar(ctx);
             this.cargarUltimaCaptura();
-            absoluteArt.herramientasCanvas.pintarTrazos(this.trazosDesdeUltimaCaptura(), this.historialTrazos, this.ctx)
+            absoluteArt.herramientasCanvas.pintarTrazos(this.trazosDesdeUltimaCaptura(), this.historialTrazos, ctx)
         }
     }
     cargarUltimaCaptura() {
@@ -129,56 +120,181 @@ class historial { // convertirlo a clase y agregar objeto capas ,  cada capa es 
     }
 }
 
+class capaBase {
+    constructor(capaPadre, idCapa, anchoCanvas, altoCanvas) {
+        this.canvas = document.createElement('canvas')
+        this.canvas.height = altoCanvas;
+        this.canvas.width = anchoCanvas;
+        this.ctx = this.canvas.getContext('2d');
+        this.id = idCapa
+        this.nombre = 'capa ' + idCapa
+        this.capaPadre = capaPadre;
+    }
+    visible = true;
+    editable = true;
+    opacidad = 1;
+
+    renderizar() {
+        console.log("a")
+    }
+}
+
+class grupoCapas extends capaBase {
+    constructor(capaPadre, idCapa, anchoCanvas, altoCanvas) {
+        super(capaPadre, idCapa, anchoCanvas, altoCanvas)
+    }
+    tipoCapa = 'grupo';
+
+    contenido = [];
+
+    renderizar(ctx) {
+        for (let i = this.contenido.length > 0; i--;) {
+            capa[i].renderizar(ctx);
+        }
+    }
+}
+
+class capa extends capaBase {
+    constructor(capaPadre, idCapa, anchoCanvas, altoCanvas, historial) {
+        super(capaPadre, idCapa, anchoCanvas, altoCanvas)
+        this.historial = historial;
+    }
+    tipoCapa = 'individual';
+
+    renderizar(ctx) {
+        ctx.drawImage(this.canvas, 0, 0)
+    }
+}
+
 absoluteArt.lienzo = {
-    configuracionCapas: {
+    confCapas: {
         frecuenciaCapturas: 10,
         trayectoMuyLargo: 1000,
         limiteCapturasHistorial: 10,
         altoCanvas: 720,
         anchoCanvas: 1280
-    },
+    }, //no de capa
+    conteoCapas: 0, // control de Id de capas
+    conteoGrupoCapas: 0, // control de Id de capas
     capas: [],
-    capaActiva: 0,
+    capasIndividualesVivas: [],
+    capasGrupoVivas: [],
+    capaActiva: 'ad',
 
-    agregarCapa() {
-        const historialCapa = new historial(
-            this.configuracionCapas.frecuenciaCapturas,
-            this.configuracionCapas.trayectoMuyLargo,
-            this.configuracionCapas.limiteCapturasHistorial,
-            this.configuracionCapas.altoCanvas,
-            this.configuracionCapas.anchoCanvas)
-        this.capas.push({ visible: true ,editable: true, opacidad : 1 ,historial: historialCapa })
+    agregarCapa(idCarpeta) {
+        const capaPadre = this.buscarGrupoCapas(idCarpeta, this.capas);
+        if (capaPadre) {
+            this.conteoCapas++;
+            const historialCapa = new historial(
+                this.confCapas.frecuenciaCapturas,
+                this.confCapas.trayectoMuyLargo,
+                this.confCapas.limiteCapturasHistorial,)
+
+            this.capaActiva = new capa(capaPadre, this.conteoCapas, this.confCapas.anchoCanvas, this.confCapas.altoCanvas, historialCapa);
+            absoluteArt.lienzo.capasIndividualesVivas.push(absoluteArt.lienzo.capaActiva)
+            capaPadre.contenido.push(this.capaActiva)
+        }
     },
-    renderizarCapas(ctx) {
-        for (const capa of this.capas) {
-            if (capa.visible) {
-                ctx.drawImage(capa.historial.canvas, 0, 0);
+
+    eliminarCapa(id) {
+        if (this.capasIndividualesVivas.length > 1) {
+            const contenidoPadre = this.buscarCapa(id, this.capas).capaPadre.contenido;
+            let i = 0
+            let capaEliminada = false
+            while (i < contenidoPadre.length && !capaEliminada) {
+
+                if (contenidoPadre[i].id === id && contenidoPadre[i].tipoCapa === "individual") {
+                    capaEliminada = true;
+                    contenidoPadre.splice(i, 1);
+                    let cont = 0;
+                    let capaVivaEliminada = false;
+                    while (cont < this.capasIndividualesVivas.length && !capaVivaEliminada) {
+                        if (this.capasIndividualesVivas[i].id === id && contenidoPadre[i].tipoCapa === "individual") {
+                            this.capasIndividualesVivas.splice(i, 1);
+                            capaVivaEliminada = true;
+                        }
+                        cont++;
+                    }
+                    if (contenidoPadre.length > 0) {
+                        this.capaActiva = contenidoPadre[0];
+                    } else {
+                        this.capaActiva = capasIndividualesVivas[0];
+                    }
+                }
+
+                i++
             }
         }
     },
-    renderizarUnaCapa(indiceCapa, ctx) {
-        if (this.capas[indiceCapa].visible) {
-            absoluteArt.herramientasCanvas.vaciar(ctx)
-            ctx.drawImage(this.capas[indiceCapa].historial.canvas, 0, 0)
+
+    agregarGrupoCapas(idCarpeta) {
+        const capaPadre = this.buscarGrupoCapas(idCarpeta, this.capas);
+        if (capaPadre) {
+            this.conteoGrupoCapas++;
+            const nuevaCapa = new grupoCapas(capaPadre, this.conteoGrupoCapas, this.confCapas.anchoCanvas, this.confCapas.altoCanvas);
+            absoluteArt.lienzo.capasGrupoVivas.push(nuevaCapa)
+            this.buscarGrupoCapas(idCarpeta, this.capas).contenido.push(nuevaCapa);
         }
     },
 
-
-    moverCapa(indiceCapa,nuevoIndice){
-
+    eliminarGrupoCapas(id) {
+        if (this.capasGrupoVivas.length > 0 && id !== 0) {
+            const contenidoPadre = this.buscarGrupoCapas(id, this.capas).capaPadre.contenido;
+            let i = 0
+            let capaEliminada = false
+            while (i < contenidoPadre.length && !capaEliminada) {
+                if (contenidoPadre[i].id === id && contenidoPadre[i].tipoCapa === "grupo") {
+                    capaEliminada = true;
+                    contenidoPadre.splice(i, 1);
+                    let cont = 0;
+                    let capaVivaEliminada = false;
+                    while (cont < this.capasGrupoVivas.length && !capaVivaEliminada) {
+                        if (this.capasGrupoVivas[i].id === id && contenidoPadre[i].tipoCapa === "grupo") {
+                            this.capasGrupoVivas.splice(i, 1);
+                            capaVivaEliminada = true;
+                        }
+                        cont++;
+                    }
+                    
+                }
+                i++
+            }
+        }
     },
-    eliminarCapa(indiceCapa){
 
+    buscarGrupoCapas(id, lista) {
+        if (id <= this.conteoGrupoCapas && id === 0) {
+            return lista;
+        }
+        if (lista.contenido.length > 0) {
+
+            for (const lugar of lista.contenido) {
+                if (lugar.tipoCapa === 'grupo' && lugar.id === id) {
+                    return lugar;
+                }
+                if (lugar.contenido) {
+                    const encontrado = this.buscarGrupoCapas(id, lugar);
+                    if (encontrado) return encontrado;
+                }
+            }
+        }
     },
-    duplicarCapa(indiceCapa){
 
+    buscarCapa(id, lista) {
+        if (id <= this.conteoCapas && lista.contenido.length > 0) {
+            for (const lugar of lista.contenido) {
+                if (lugar.tipoCapa === 'individual' && lugar.id === id) {
+                    return lugar;
+                }
+                if (lugar.contenido) {
+                    const encontrado = this.buscarGrupoCapas(id, lugar);
+                    if (encontrado !== undefined) return encontrado;
+                }
+            }
+        }
     },
-    fusionarCapas(){
-
-    }
 
 }
-
 absoluteArt.herramientasCanvas = { // secion de herramientas q actuan con el canvas sin ser dibujos manuales o figuras
     vaciar(ctx) {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
@@ -193,7 +309,6 @@ absoluteArt.herramientasCanvas = { // secion de herramientas q actuan con el can
     },
 
 }
-
 absoluteArt.utiles = { // funciones que voy a usar cuando necesite
     datosCuadrilatero(trayecto) {
         let x = 0;
@@ -261,20 +376,7 @@ absoluteArt.utiles = { // funciones que voy a usar cuando necesite
         const infoObjeto = { x: elemento.getBoundingClientRect().x, y: elemento.getBoundingClientRect().y };
         return { x: cordX - infoObjeto.x, y: cordY - infoObjeto.y };
     },
-    configurarEsteticaCanvas(canvas) {
-        const ctx = canvas.getContext('2d');
-        ctx.imageSmoothingEnabled = false;
-
-        // 2. ¡MUY IMPORTANTE! Para navegadores viejos o Firefox/Safari, 
-        // a veces hay que usar los prefijos viejos para asegurarse de que se apague:
-        ctx.mozImageSmoothingEnabled = false;
-        ctx.webkitImageSmoothingEnabled = false;
-        ctx.msImageSmoothingEnabled = false;
-        canvas.style.imageRendering = 'pixelated';
-        canvas.style.imageRendering = 'crisp-edges'; // me lo tiro gemini , para el navegador de mierda pq lo difumina
-    }
 }
-
 absoluteArt.dibujo = { // seccion de figuras pinceles y cualquier cosa que sea dibujo direto del canvas
     figuras: {
         lineaRedondeada(conf, ctx) { // acomodar posicion de los circulos , recortar medio grosor la linea en cada lado y evitar solapamiento de alpha
@@ -407,5 +509,30 @@ absoluteArt.dibujo = { // seccion de figuras pinceles y cualquier cosa que sea d
     herramientas: {
         borrador(conf, ctx) {
         }
+    }
+}
+
+absoluteArt.configuracion = {
+    configurarEsteticaCanvas(canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+
+        // 2. ¡MUY IMPORTANTE! Para navegadores viejos o Firefox/Safari, 
+        // a veces hay que usar los prefijos viejos para asegurarse de que se apague:
+        ctx.mozImageSmoothingEnabled = false;
+        ctx.webkitImageSmoothingEnabled = false;
+        ctx.msImageSmoothingEnabled = false;
+        canvas.style.imageRendering = 'pixelated';
+        canvas.style.imageRendering = 'crisp-edges'; // me lo tiro gemini , para el navegador de mierda pq lo difumina
+    },
+    agregarCapaBase() {
+        absoluteArt.lienzo.capas = new grupoCapas(undefined, absoluteArt.lienzo.conteoGrupoCapas, absoluteArt.lienzo.confCapas.anchoCanvas, absoluteArt.lienzo.confCapas.altoCanvas);
+        const historialCapa = new historial(
+            absoluteArt.lienzo.confCapas.frecuenciaCapturas,
+            absoluteArt.lienzo.confCapas.trayectoMuyLargo,
+            absoluteArt.lienzo.confCapas.limiteCapturasHistorial,)
+        absoluteArt.lienzo.capaActiva = new capa(absoluteArt.lienzo.capas, absoluteArt.lienzo.conteoCapas, absoluteArt.lienzo.confCapas.anchoCanvas, absoluteArt.lienzo.confCapas.altoCanvas, historialCapa)
+        absoluteArt.lienzo.capas.contenido.push(absoluteArt.lienzo.capaActiva)
+        absoluteArt.lienzo.capasIndividualesVivas.push(absoluteArt.lienzo.capaActiva)
     }
 }

@@ -9,8 +9,8 @@
 </head>
 
 <body>
-    <div class="configuracionCapa" id="">
-        <div class="opacidadCapa">
+    <div class="configuracionCapa" id=""  style = "display: none;">
+        <div class="opacidadCapa"> 
             <div class="configCapa">
                 <div class="atributoCapa">
                     Editable
@@ -18,9 +18,9 @@
                 </div>
                 <div class="atributoCapa">
                     visible
-                <input type="checkbox" name="" id="" checked>
+                    <input type="checkbox" name="" id="" checked>
                 </div>
-                
+
                 <div class="atributoCapa">
                     opacidad
                     <input type="number" name="" id="" max="1" min="0" step="0.1">
@@ -31,6 +31,7 @@
             </div>
         </div>
     </div>
+
     <div class="seccionArriba">
         <div class="barraMenu">
             <button type="button" id="retrocederTrazo" onclick="revertirTrazo()">atras</button>
@@ -116,6 +117,7 @@
     <div class="barraEstatus">
 
     </div>
+    
     <script src="js/paint.js"></script>
     <script src="js/script.js"></script>
 </body>

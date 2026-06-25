@@ -8,12 +8,14 @@ function hexToRgb(hex) {
 }
 
 
-absoluteArt.lienzo.agregarCapa();
 const canvas = document.querySelector("canvas")
 const ctx = canvas.getContext('2d')
 const canvasInfo = canvas.getBoundingClientRect();
 
-absoluteArt.utiles.configurarEsteticaCanvas(canvas)
+absoluteArt.configuracion.configurarEsteticaCanvas(canvas)
+absoluteArt.configuracion.agregarCapaBase() 
+
+
 
 function revertirTrazo() {
     if (absoluteArt.lienzo.capas[absoluteArt.lienzo.capaActiva].historial.historialTrazos.length > 0) {
@@ -85,7 +87,7 @@ function listarCapas() {
 listarCapas();
 
 function agregarCapa() {
-    absoluteArt.lienzo.agregarCapa();
+    console.log(absoluteArt.lienzo.agregarCapa(0))
     listarCapas()
 }
 
