@@ -5,5 +5,4 @@ en proceso de creacion de sistema de capas, enduda de tener o no agrupacion de c
 
 correccion de bug al pintar trazos , al guardar un trazo en historial se pintaba directamente en su canvas correspondiente, pero al guardar captura se volvio a a hacer y si era n trazo de alpha != 0 o 1 se veia la diferencia  , para solucionarlo lo puse directamente en el if que revisaba si se guardaba captura, justamente agregue un else y puse ese pintado de trazo ahi.
 
-
 https://absoluteart.vercel.app/
