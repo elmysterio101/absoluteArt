@@ -163,8 +163,6 @@ function agregarCapaDom(tipo) {
 
 }
 
-
-
 function actualizarCanvasEnPantalla(capa, ctx) {
     capa.renderizar(ctx)
 }
@@ -174,7 +172,7 @@ let clickeando = false;
 
 canvas.addEventListener('mousedown', (e) => {
 
-    
+
 
     clickeando = true;
     recorrido = []; // adaptarCordCanvas(cordX,cordY,canvas)
@@ -206,6 +204,6 @@ canvas.addEventListener('mouseup', (e) => {
     recorrido.push(absoluteArt.utiles.adaptarCordCanvas(e.clientX, e.clientY, ctx))
     parametros = obtenerParametros();
     absoluteArt.lienzo.capaActiva.historial.guardarHistorial(parametros);
-    actualizarCanvasEnPantalla(absoluteArt.lienzo.capaActiva, ctx);
+    actualizarCanvasEnPantalla(absoluteArt.lienzo.capas, ctx);
 });
 

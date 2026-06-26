@@ -160,8 +160,10 @@ class grupoCapas extends capaBase {
     contenido = [];
 
     renderizar(ctx) {
-        for (let i = this.contenido.length - 1; i > 0; i--) {
-            this.contenido[i].renderizar(ctx);
+        console.log(this.contenido)
+        for (let i = 0; this.contenido.length - 1 > 0; i--) {
+            console.log(this.contenido[ this.contenido.length - i -1])
+            this.contenido[ this.contenido.length - i -1].renderizar(ctx);
         }
     }
 }
@@ -178,6 +180,7 @@ class capa extends capaBase {
     tipoCapa = 'individual';
 
     renderizar(ctx) {
+        console.log(" a ")
         ctx.drawImage(this.canvas, 0, 0)
     }
 }
