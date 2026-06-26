@@ -9,8 +9,8 @@
 </head>
 
 <body>
-    <div class="configuracionCapa" id=""  style = "display: none;">
-        <div class="opacidadCapa"> 
+    <div class="configuracionCapa" id="" style="display: none;">
+        <div class="opacidadCapa">
             <div class="configCapa">
                 <div class="atributoCapa">
                     Editable
@@ -99,25 +99,60 @@
             <div class="visualizacionHistorial"></div>
         </div>
 
-        <canvas id="canvasPrincipal">
+        <canvas height="1080" width="1920" id="canvasPrincipal">
 
-        </canvas> <input type="checkbox" name="" id="">
+        </canvas>
 
         <div class="seccionDerecha">
-            <button type="button" id="agregarCapas" onclick="agregarCapa()">agregar capa</button>
-            <form id="listaCapas" onchange="cambiarCapaActual(event)">
+            <div class="botones-agregar-capas">
+                <button type="button" onclick="agregarCapaDom('individual')">agregar capa</button>
+                <button type="button" onclick="agregarCapaDom('grupo')">agregar grupo</button>
+            </div>
+            <div class="representacionCapas">
 
 
-            </form>
-            <div class="configurarCapas">
+                <div class="representacionCapa representacionCapaGrupo" id="representacionGrupo0">
+                    <input type="checkbox" name="" class="input" id="desplegableCapa0">
 
+                    <div class="portada">
+                        <label for="desplegableCapa0" class="plegado">
+                            <p> > </p>
+                        </label>
+                        <button type="button" class="infoPlegado" onclick="seleccionarCapa(0 , 'grupo')">
+                            <p class="nombreCapa"> grupo 0</p>
+                            <canvas id="canvasGrupoCapas0"></canvas>
+                        </button>
+                    </div>
+                    <div class="contenido" id="contenido0">
+
+                        <div class="representacionCapa representacionCapaGrupo capaIndividual activo" id="representacionCapa0">
+                            <input type="checkbox" name="" class="input" id="visibilidadCapa0 onchange= "cambiarVisibilidadCapa('individual' , 0)">
+                            <div class="portada">
+                                <label for="visibilidadCapa0" class="plegado">
+                                    <p>0</p>
+                                </label>
+                                <button type="button" class="infoPlegado" onclick="seleccionarCapa(0 , 'individual')">
+                                    <p class="nombreCapa"> capa 0</p>
+                                    <canvas id="canvasGrupoCapas0"></canvas>
+                                </button>
+                            </div>
+                        </div>
+                    
+                    </div>
+                </div>
+
+
+
+            </div>
+            <div class="editar-capa">
+                <button type="button" onclick="">editar capa</button>
             </div>
         </div>
     </section>
     <div class="barraEstatus">
 
     </div>
-    
+
     <script src="js/paint.js"></script>
     <script src="js/script.js"></script>
 </body>

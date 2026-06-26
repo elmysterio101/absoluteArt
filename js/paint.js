@@ -26,22 +26,22 @@ constructor(lienzo , frecuenciaCapturas , trayectoMuyLargo , limiteCapturasHisto
     this.limiteCapturasHistorial = limiteCapturasHistorial; // de base son 10
     }
 */
-
 const absoluteArt = {} // heramientas
 
-class historial { // convertirlo a clase y agregar objeto capas ,  cada capa es enrealidad 1 historial , luego ya veo como manejarle dentro
-    constructor(frecuenciaCapturas, trayectoMuyLargo, limiteCapturasHistorial,) {
+class historial {
+    constructor(frecuenciaCapturas, trayectoMuyLargo, limiteCapturasHistorial, ctx) {
         this.frecuenciaTrazos = frecuenciaCapturas;// de base son 10
         this.trayectoMuyLargo = trayectoMuyLargo; // de base son 1k
         this.limiteCapturasHistorial = limiteCapturasHistorial; // de base son 10
+        this.ctx = ctx;
     }
     trazosRevertidos = [];
     historialTrazos = [];
     historialCapturas = []; // {captura:, indice:}
 
-    revertirTrazo(ctx) {
+    revertirTrazo() {
         if (this.historialTrazos.length > 0) {
-            absoluteArt.herramientasCanvas.vaciar(ctx);
+            absoluteArt.herramientasCanvas.vaciar(this.ctx);
             this.trazosRevertidos.push(this.historialTrazos[this.historialTrazos.length - 1])
             if (this.historialCapturas.length > 0) {
                 if (this.historialCapturas[this.historialCapturas.length - 1].indice === this.historialTrazos.length - 1) {
@@ -52,22 +52,24 @@ class historial { // convertirlo a clase y agregar objeto capas ,  cada capa es 
             this.pintarHistorial();
         }
     }
-    recuperarTrazo(ctx) {
+    recuperarTrazo() {
         if (this.trazosRevertidos.length > 0) {
             this.historialTrazos.push(this.trazosRevertidos[this.trazosRevertidos.length - 1])
             this.trazosRevertidos.pop();
             const ultTrazo = this.historialTrazos[this.historialTrazos.length - 1];
-            absoluteArt[ultTrazo.contexto.tipoHerramienta]?.[ultTrazo.contexto.categoriaHerramienta]?.[ultTrazo.contexto.herramienta](ultTrazo, ctx)
-                ?? absoluteArt[ultTrazo.contexto.tipoHerramienta]?.[ultTrazo.contexto.herramienta]?.(ultTrazo, ctx);
+            absoluteArt[ultTrazo.contexto.tipoHerramienta]?.[ultTrazo.contexto.categoriaHerramienta]?.[ultTrazo.contexto.herramienta](ultTrazo, this.ctx)
+                ?? absoluteArt[ultTrazo.contexto.tipoHerramienta]?.[ultTrazo.contexto.herramienta]?.(ultTrazo, this.ctx);
         }
     }
-    guardarHistorial(conf, ctx) {
+    guardarHistorial(conf) {
         this.guardarTrazo(conf);
         if (this.debeGuardarCaptura(conf)) {
+            absoluteArt[conf.contexto.tipoHerramienta]?.[conf.contexto.categoriaHerramienta]?.[conf.contexto.herramienta](conf, this.ctx)
+                ?? absoluteArt[conf.contexto.tipoHerramienta]?.[conf.contexto.herramienta]?.(conf, this.ctx);
             this.guardarCaptura(conf);
         } else {
-            absoluteArt[conf.contexto.tipoHerramienta]?.[conf.contexto.categoriaHerramienta]?.[conf.contexto.herramienta](conf, ctx)
-                ?? absoluteArt[conf.contexto.tipoHerramienta]?.[conf.contexto.herramienta]?.(conf, ctx);
+            absoluteArt[conf.contexto.tipoHerramienta]?.[conf.contexto.categoriaHerramienta]?.[conf.contexto.herramienta](conf, this.ctx)
+                ?? absoluteArt[conf.contexto.tipoHerramienta]?.[conf.contexto.herramienta]?.(conf, this.ctx);
         }
     }
     guardarTrazo(trazo) {
@@ -85,13 +87,13 @@ class historial { // convertirlo a clase y agregar objeto capas ,  cada capa es 
         }
         return cantidadTrazos;
     }
-    guardarCaptura(conf, canvas) {
+    guardarCaptura(conf) {
         if (this.historialCapturas.length - 1 >= this.limiteCapturasHistorial) {
             this.historialCapturas.splice(0, 1)
         }
         const canvasTrucho = document.createElement("canvas")
-        canvasTrucho.width = canvas.width
-        canvasTrucho.height = canvas.height
+        canvasTrucho.width = this.ctx.canvas.width
+        canvasTrucho.height = this.ctx.canvas.height
         const ctxTrucho = canvasTrucho.getContext('2d')
         ctxTrucho.drawImage(canvas, 0, 0)
         this.historialCapturas.push({ captura: canvasTrucho, indice: this.historialTrazos.length - 1 })
@@ -105,21 +107,30 @@ class historial { // convertirlo a clase y agregar objeto capas ,  cada capa es 
         }
         return guardarEstado;
     }
-    pintarHistorial(ctx) {
+    pintarHistorial() {
         if (this.historialTrazos.length > 0) {
-            absoluteArt.herramientasCanvas.vaciar(ctx);
+            this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height)
             this.cargarUltimaCaptura();
-            absoluteArt.herramientasCanvas.pintarTrazos(this.trazosDesdeUltimaCaptura(), this.historialTrazos, ctx)
+
+
+            const cantTrazos = this.trazosDesdeUltimaCaptura();
+            const trazos = this.historialCapturas;
+            for (let i = 0; i < cantTrazos; i++) {
+                const indiceTrazo = trazos.length - cantTrazos + i;
+                const trazoActual = trazos[indiceTrazo];
+                absoluteArt[trazoActual.contexto.tipoHerramienta]?.[trazoActual.contexto.categoriaHerramienta]?.[trazoActual.contexto.herramienta](trazoActual, this.ctx)
+                    ?? absoluteArt[trazoActual.contexto.tipoHerramienta]?.[trazoActual.contexto.herramienta]?.(trazoActual, this.ctx);
+            }
+            //absoluteArt.herramientasCanvas.pintarTrazos(this.trazosDesdeUltimaCaptura(), this.historialTrazos, this.ctx)
         }
     }
-    cargarUltimaCaptura() {
+    cargarUltimaCaptura() { // sin razon de cambio
         if (this.historialCapturas.length > 0) {
             const captura = this.historialCapturas[this.historialCapturas.length - 1].captura;
             this.ctx.drawImage(captura, 0, 0)
         }
     }
 }
-
 class capaBase {
     constructor(capaPadre, idCapa, anchoCanvas, altoCanvas) {
         this.canvas = document.createElement('canvas')
@@ -127,37 +138,42 @@ class capaBase {
         this.canvas.width = anchoCanvas;
         this.ctx = this.canvas.getContext('2d');
         this.id = idCapa
-        this.nombre = 'capa ' + idCapa
         this.capaPadre = capaPadre;
     }
+    x = 0;
+    y = 0;
     visible = true;
     editable = true;
     opacidad = 1;
 
     renderizar() {
-        console.log("a")
+
     }
 }
-
 class grupoCapas extends capaBase {
     constructor(capaPadre, idCapa, anchoCanvas, altoCanvas) {
         super(capaPadre, idCapa, anchoCanvas, altoCanvas)
+        this.nombre = 'grupo ' + idCapa
     }
     tipoCapa = 'grupo';
 
     contenido = [];
 
     renderizar(ctx) {
-        for (let i = this.contenido.length > 0; i--;) {
-            capa[i].renderizar(ctx);
+        for (let i = this.contenido.length - 1; i > 0; i--) {
+            this.contenido[i].renderizar(ctx);
         }
     }
 }
-
 class capa extends capaBase {
-    constructor(capaPadre, idCapa, anchoCanvas, altoCanvas, historial) {
+    constructor(capaPadre, idCapa, anchoCanvas, altoCanvas, frecuenciaCapturas, trayectoMuyLargo, limiteCapturasHistorial) {
         super(capaPadre, idCapa, anchoCanvas, altoCanvas)
-        this.historial = historial;
+        this.historial = new historial(
+            frecuenciaCapturas,
+            trayectoMuyLargo,
+            limiteCapturasHistorial,
+            this.ctx);
+        this.nombre = 'capa ' + idCapa
     }
     tipoCapa = 'individual';
 
@@ -180,17 +196,20 @@ absoluteArt.lienzo = {
     capasIndividualesVivas: [],
     capasGrupoVivas: [],
     capaActiva: 'ad',
+    grupoCapasActiva: 'ad',
 
     agregarCapa(idCarpeta) {
         const capaPadre = this.buscarGrupoCapas(idCarpeta, this.capas);
         if (capaPadre) {
             this.conteoCapas++;
-            const historialCapa = new historial(
+
+            this.capaActiva = new capa(capaPadre,
+                this.conteoCapas,
+                this.confCapas.anchoCanvas,
+                this.confCapas.altoCanvas,
                 this.confCapas.frecuenciaCapturas,
                 this.confCapas.trayectoMuyLargo,
-                this.confCapas.limiteCapturasHistorial,)
-
-            this.capaActiva = new capa(capaPadre, this.conteoCapas, this.confCapas.anchoCanvas, this.confCapas.altoCanvas, historialCapa);
+                this.confCapas.limiteCapturasHistorial);
             absoluteArt.lienzo.capasIndividualesVivas.push(absoluteArt.lienzo.capaActiva)
             capaPadre.contenido.push(this.capaActiva)
         }
@@ -233,6 +252,7 @@ absoluteArt.lienzo = {
             this.conteoGrupoCapas++;
             const nuevaCapa = new grupoCapas(capaPadre, this.conteoGrupoCapas, this.confCapas.anchoCanvas, this.confCapas.altoCanvas);
             absoluteArt.lienzo.capasGrupoVivas.push(nuevaCapa)
+            this.grupoCapasActiva = nuevaCapa;
             this.buscarGrupoCapas(idCarpeta, this.capas).contenido.push(nuevaCapa);
         }
     },
@@ -255,7 +275,7 @@ absoluteArt.lienzo = {
                         }
                         cont++;
                     }
-                    
+
                 }
                 i++
             }
@@ -292,24 +312,15 @@ absoluteArt.lienzo = {
                 }
             }
         }
-    },
-
+    }
 }
-absoluteArt.herramientasCanvas = { // secion de herramientas q actuan con el canvas sin ser dibujos manuales o figuras
+absoluteArt.herramientasCanvas = {
     vaciar(ctx) {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-    },
-    pintarTrazos(cantTrazos, trazos, ctx) {
-        for (let i = 0; i < cantTrazos; i++) {
-            const indiceTrazo = trazos.length - cantTrazos + i;
-            const trazoActual = trazos[indiceTrazo];
-            absoluteArt[trazoActual.contexto.tipoHerramienta]?.[trazoActual.contexto.categoriaHerramienta]?.[trazoActual.contexto.herramienta](trazoActual, ctx)
-                ?? absoluteArt[trazoActual.contexto.tipoHerramienta]?.[trazoActual.contexto.herramienta]?.(trazoActual, ctx);
-        }
-    },
+    }
 
 }
-absoluteArt.utiles = { // funciones que voy a usar cuando necesite
+absoluteArt.utiles = {
     datosCuadrilatero(trayecto) {
         let x = 0;
         let y = 0;
@@ -511,7 +522,6 @@ absoluteArt.dibujo = { // seccion de figuras pinceles y cualquier cosa que sea d
         }
     }
 }
-
 absoluteArt.configuracion = {
     configurarEsteticaCanvas(canvas) {
         const ctx = canvas.getContext('2d');
@@ -527,11 +537,14 @@ absoluteArt.configuracion = {
     },
     agregarCapaBase() {
         absoluteArt.lienzo.capas = new grupoCapas(undefined, absoluteArt.lienzo.conteoGrupoCapas, absoluteArt.lienzo.confCapas.anchoCanvas, absoluteArt.lienzo.confCapas.altoCanvas);
-        const historialCapa = new historial(
+        absoluteArt.lienzo.grupoCapasActiva = absoluteArt.lienzo.capas;
+        absoluteArt.lienzo.capaActiva = new capa(absoluteArt.lienzo.capas,
+            absoluteArt.lienzo.conteoCapas,
+            absoluteArt.lienzo.confCapas.anchoCanvas,
+            absoluteArt.lienzo.confCapas.altoCanvas,
             absoluteArt.lienzo.confCapas.frecuenciaCapturas,
             absoluteArt.lienzo.confCapas.trayectoMuyLargo,
             absoluteArt.lienzo.confCapas.limiteCapturasHistorial,)
-        absoluteArt.lienzo.capaActiva = new capa(absoluteArt.lienzo.capas, absoluteArt.lienzo.conteoCapas, absoluteArt.lienzo.confCapas.anchoCanvas, absoluteArt.lienzo.confCapas.altoCanvas, historialCapa)
         absoluteArt.lienzo.capas.contenido.push(absoluteArt.lienzo.capaActiva)
         absoluteArt.lienzo.capasIndividualesVivas.push(absoluteArt.lienzo.capaActiva)
     }

@@ -66,9 +66,9 @@ body {
 .seccionDerecha {
     height: calc(80vh - var(--padding));
     background-color: lightblue;
-    right: var(--padding);
+    right: var(-);
     height: calc(100% - var(--padding));
-    width: 26vh;
+    width: 40vh;
     position: absolute;
     right: calc(var(--padding) / 2);
     top: 50%;
@@ -76,6 +76,9 @@ body {
     display: flex;
     flex-direction: column;
     z-index: 10;
+    padding: 1vh;
+    gap: 1vh;
+    justify-content: space-between;
 }
 
 #canvasPrincipal {
@@ -147,56 +150,128 @@ select {
     width: 40vh;
 }
 
-.representacionCapa {
+.representacionCapas {
+    width: 100%;
+    height: 62.8vh;
     background-color: red;
-    width: 100%;
-    height: 14vh;
+    display: flex;
+    flex-direction: column;
+    overflow-y: scroll;
+    gap: 1vh;
 }
 
-.labelCapa {
-    background-color: blue;
+.editar-capa,
+.botones-agregar-capas {
     width: 100%;
-    height: fit-content;
+    height: 5vh;
+    background-color: lightcoral;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.25vh;
 }
 
-.CanvasRepresentacionCapa {
-    background-color: rgb(223, 223, 243);
+.editar-capa>button,
+.botones-agregar-capas>button {
+    font-size: 2vh;
+    height: 100%;
     width: 100%;
-    aspect-ratio: 16/9;
 }
 
-.representacionCapa button {
-    position: relative;
-    width: 100%;
-    height: 24%;
+.botones-agregar-capas>button {
+    width: 50%;
 }
 
-#listaCapas input[type="radio"], input[type="checkbox"]  {
+.representacionCapa {
+    width: 100%;
+    min-height: 15vh;
+    background-color: goldenrod;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 1vh;
+    gap: 1vh;
+    justify-content: space-between;
+}
+
+
+
+.representacionCapa input {
     display: none;
 }
 
-.configuracionCapa input[type="checkbox"]{
-    display: block;
-}
-
-.configuracionCapa{
-    position: absolute;
-    right: 27.9vh;
-    top: 23vh;
-    z-index: 15;
-    height: 36vh;
-    width: 30vh;
-    background-color: aqua;
-}
-.atributoCapa{
+.portada {
+    max-height: 15vh;
+    max-width: 26vh;
     display: flex;
     gap: 1vh;
-    font-size: 2.9vh;
-    height: 3vh;
+    justify-content: space-between;
 }
 
-.configCapa{
+.representacionCapa .portada .plegado {
+    border: 1px solid black;
+    max-height: 15vh;
+    width: 20%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.representacionCapa .portada .infoPlegado {
+    border: 1px solid black;
+    max-height: 15vh;
+    width: 80%;
     display: flex;
     flex-direction: column;
-    gap: 1vh;
+    justify-content: space-between;
+}
+
+.representacionCapa .portada .plegado p {
+    width: 2vh;
+    height: 2vh;
+    font-weight: 700;
+    font-size: 3vh;
+}
+
+.representacionCapa input[type="checkbox"]:checked~.portada .plegado p {
+    transform: rotateZ(90deg);
+}
+
+.representacionCapa input[type="checkbox"]:not(:checked) ~ .contenido{
+    display: none;
+}
+
+.representacionCapa input[type="checkbox"]:checked ~ .contenido{
+    display: flex;
+}
+
+.infoPlegado canvas {
+    background-color: white;
+    height: 11vh;
+    width: 20vh;
+}
+
+.infoPlegado p { 
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-bottom: 1px solid;
+    font-size: 2vh;
+}
+
+.representacionCapa .contenido {
+    height: fit-content;
+    width: 95%;
+    background-color: chocolate;
+    margin-left: 5%;
+    display: flex;
+    flex-direction: column;
+}
+
+.capaIndividual{
+    background-color:rgb(218, 60, 32) ;
+}
+
+.activo{
+    background-color: lightgreen;
 }
