@@ -90,14 +90,15 @@ let idCapaActiva = 0;
 
 function seleccionarCapa(id, tipo) {
     if (tipo === 'individual') {
-        const capa = absoluteArt.lienzo.buscarCapa(id, absoluteArt.lienzo.capas);
+        const capa = absoluteArt.lienzo.capas.buscarCapa(id);
+        console.log(id, absoluteArt.lienzo.capas)
         absoluteArt.lienzo.capaActiva = capa;
         idCapaActiva = capa.id
         console.log(capa)
         document.querySelector('.activo').classList.remove('activo')
         document.getElementById('representacionCapa' + id).classList.add('activo')
     } else if (tipo === 'grupo') {
-        absoluteArt.lienzo.grupoCapasActiva = absoluteArt.lienzo.buscarGrupoCapas(id, absoluteArt.lienzo.capas);
+        absoluteArt.lienzo.grupoCapasActiva = absoluteArt.lienzo.capas.buscarGrupoCapas(id);
         idGrupoActivo = id;
 
         console.log(document.querySelector('.activo').classList)
@@ -113,6 +114,7 @@ function agregarCapaDom(tipo) {
     const ubic = document.getElementById('contenido' + idGrupoActivo);
 
     if (tipo === 'grupo') {
+        console.log(idGrupoActivo)
         absoluteArt.lienzo.agregarGrupoCapas(idGrupoActivo);
         const capa = absoluteArt.lienzo.grupoCapasActiva
         idGrupoActivo = capa.id
@@ -138,6 +140,7 @@ function agregarCapaDom(tipo) {
         seleccionarCapa(capa.id, 'grupo')
 
     } else if (tipo === 'individual') {
+        console.log(idGrupoActivo)
         absoluteArt.lienzo.agregarCapa(idGrupoActivo);
         const capa = absoluteArt.lienzo.capaActiva
 
@@ -172,8 +175,6 @@ let clickeando = false;
 
 canvas.addEventListener('mousedown', (e) => {
 
-
-
     clickeando = true;
     recorrido = []; // adaptarCordCanvas(cordX,cordY,canvas)
     recorrido.push(absoluteArt.utiles.adaptarCordCanvas(e.clientX, e.clientY, ctx))
@@ -190,10 +191,10 @@ canvas.addEventListener('mousemove', (e) => {
         recorrido.push(absoluteArt.utiles.adaptarCordCanvas(e.clientX, e.clientY, ctx))
 
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-        ctx.drawImage(absoluteArt.lienzo.capaActiva.historial.ctx.canvas , 0 ,0);
-
+        absoluteArt.lienzo.capas.renderizarHasta(ctx, absoluteArt.lienzo.capaActiva.id)
         absoluteArt[parametros.contexto.tipoHerramienta]?.[parametros.contexto.categoriaHerramienta]?.[parametros.contexto.herramienta](parametros, ctx)
             ?? absoluteArt[parametros.contexto.tipoHerramienta]?.[parametros.contexto.herramienta]?.(parametros, ctx);
+        absoluteArt.lienzo.capas.renderizarDesde(ctx, absoluteArt.lienzo.capaActiva.id)
     }
 });
 

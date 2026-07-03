@@ -1,31 +1,3 @@
-/*
-return{
-        colorPrincipal : document.getElementById("color").value,
-        opacidadPrincipal : document.getElementById("opcaidad").value,
-        grosorLinea : document.getElementById("grosor").value,
-        
-        colorSecundario : document.getElementById("colorRelleno").value,
-        opacidadSecundaria : document.getElementById("opcaidadRelleno").value,
-        contexto : {
-            tipoHerramienta : "dibujo",
-            categoriaHerramienta : "figuras",
-            heamienta : "linea",
-            recrrorrido,
-        }
-    }
-*/
-// clases ,  por ahora solo clase historial
-/*
-constructor(lienzo , frecuenciaCapturas , trayectoMuyLargo , limiteCapturasHistorial , anchoCanvas, altoCanvas)  {
-    this.canvas = document.createElement('canvas')
-    this.canvas.height = altoCanvas;
-    this.canvas.width = anchoCanvas;
-    this.ctx = this.canvas.getContext('2d');
-    this.frecuenciaTrazos = frecuenciaCapturas ;// de base son 10
-    this.trayectoMuyLargo = trayectoMuyLargo; // de base son 1k
-    this.limiteCapturasHistorial = limiteCapturasHistorial; // de base son 10
-    }
-*/
 const absoluteArt = {} // heramientas
 
 class historial {
@@ -160,11 +132,111 @@ class grupoCapas extends capaBase {
     contenido = [];
 
     renderizar(ctx) {
-        console.log(this.contenido)
-        for (let i = 0; this.contenido.length - 1 > 0; i--) {
-            console.log(this.contenido[ this.contenido.length - i -1])
-            this.contenido[ this.contenido.length - i -1].renderizar(ctx);
+        for (const capa of this.contenido) {
+            capa.renderizar(ctx);
         }
+    }
+
+    renderizarHasta(ctx, idCapaLimite) {
+        for (const capa of this.contenido) {
+            capa.renderizar(ctx);
+            if (capa.id === idCapaLimite) {
+                return;
+            }
+        }
+    }
+
+    renderizarDesde(ctx, idCapaLimite) {
+        let capaEncontrada = false;
+        for (const capa of this.contenido) {
+            if (capaEncontrada) {
+                capa.renderizar(ctx);
+
+            }
+            if (capa.id === idCapaLimite) {
+                capaEncontrada = true;
+            }
+        }
+    }
+
+    buscarCapa(id) {
+        if (this.contenido.length > 0) {
+            for (const lugar of this.contenido) {
+                if (lugar.tipoCapa === 'individual' && lugar.id === id) {
+                    return lugar;
+                }
+                if (lugar.contenido) {
+                    const encontrado = lugar.buscarCapa(id);
+                    if (encontrado !== undefined) return encontrado;
+                }
+            }
+        }
+    }
+
+    buscarGrupoCapas(id) {
+        if (id === 0) {
+            return absoluteArt.lienzo.capas; // capa " dios " digamos
+        }
+        if (this.contenido.length > 0) {
+            for (const lugar of this.contenido) {
+                if (lugar.tipoCapa === 'grupo' && lugar.id === id) {
+                    return lugar;
+                }
+                if (lugar.contenido) {
+                    const encontrado = lugar.buscarGrupoCapas(id, lugar);
+                    if (encontrado) return encontrado;
+                }
+            }
+        }
+    }
+
+    agregarCapa(confCapas) {
+        const nuevaCapa = new capa(
+            confCapas.capaPadre,
+            confCapas.idCapa,
+            confCapas.anchoCanvas,
+            confCapas.altoCanvas,
+            confCapas.frecuenciaCapturas,
+            confCapas.trayectoMuyLargo,
+            confCapas.limiteCapturasHistorial);
+        this.contenido.push(nuevaCapa);
+        return nuevaCapa;
+    }
+
+    agregarGrupoCapas(confCapas) {
+        const nueveGrupo = new grupoCapas(
+            confCapas.capaPadre,
+            confCapas.idCarpeta,
+            confCapas.anchoCanvas,
+            confCapas.altoCanvas);
+
+        this.contenido.push(nueveGrupo);
+
+        return nueveGrupo;
+    }
+
+    eliminarCapa(id) {
+        let cont = 0;
+        while (cont < this.contenido.length) {
+            if (this.contenido[cont].id === id && this.contenido[cont].tipoCapa === "individual") {
+                this.contenido.splice(cont, 1)
+                return true;
+            }
+            cont++;
+        }
+        return false;
+    }
+
+    eliminarGrupoCapas(id) {
+        let cont = 0;
+        while (cont < this.contenido.length) {
+            if (this.contenido[cont].id === id && this.contenido[cont].tipoCapa === "grupo") {
+                this.contenido.splice(cont, 1)
+                return true;
+            }
+            cont++;
+        }
+        return false;
     }
 }
 class capa extends capaBase {
@@ -180,7 +252,6 @@ class capa extends capaBase {
     tipoCapa = 'individual';
 
     renderizar(ctx) {
-        console.log(" a ")
         ctx.drawImage(this.canvas, 0, 0)
     }
 }
@@ -198,124 +269,74 @@ absoluteArt.lienzo = {
     capas: [],
     capasIndividualesVivas: [],
     capasGrupoVivas: [],
-    capaActiva: 'ad',
-    grupoCapasActiva: 'ad',
+    capaActiva: undefined,
+    grupoCapasActiva: undefined,
 
     agregarCapa(idCarpeta) {
-        const capaPadre = this.buscarGrupoCapas(idCarpeta, this.capas);
+        const capaPadre = this.capas.buscarGrupoCapas(idCarpeta);
         if (capaPadre) {
             this.conteoCapas++;
 
-            this.capaActiva = new capa(capaPadre,
-                this.conteoCapas,
-                this.confCapas.anchoCanvas,
-                this.confCapas.altoCanvas,
-                this.confCapas.frecuenciaCapturas,
-                this.confCapas.trayectoMuyLargo,
-                this.confCapas.limiteCapturasHistorial);
-            absoluteArt.lienzo.capasIndividualesVivas.push(absoluteArt.lienzo.capaActiva)
-            capaPadre.contenido.push(this.capaActiva)
-        }
-    },
+            const confCapa = this.confCapas;
+            confCapa.capaPadre = capaPadre;
+            confCapa.idCapa = this.conteoCapas;
 
-    eliminarCapa(id) {
-        if (this.capasIndividualesVivas.length > 1) {
-            const contenidoPadre = this.buscarCapa(id, this.capas).capaPadre.contenido;
-            let i = 0
-            let capaEliminada = false
-            while (i < contenidoPadre.length && !capaEliminada) {
-
-                if (contenidoPadre[i].id === id && contenidoPadre[i].tipoCapa === "individual") {
-                    capaEliminada = true;
-                    contenidoPadre.splice(i, 1);
-                    let cont = 0;
-                    let capaVivaEliminada = false;
-                    while (cont < this.capasIndividualesVivas.length && !capaVivaEliminada) {
-                        if (this.capasIndividualesVivas[i].id === id && contenidoPadre[i].tipoCapa === "individual") {
-                            this.capasIndividualesVivas.splice(i, 1);
-                            capaVivaEliminada = true;
-                        }
-                        cont++;
-                    }
-                    if (contenidoPadre.length > 0) {
-                        this.capaActiva = contenidoPadre[0];
-                    } else {
-                        this.capaActiva = capasIndividualesVivas[0];
-                    }
-                }
-
-                i++
-            }
+            this.capaActiva = capaPadre.agregarCapa(confCapa);
+            this.capasIndividualesVivas.push(this.capaActiva);
         }
     },
 
     agregarGrupoCapas(idCarpeta) {
-        const capaPadre = this.buscarGrupoCapas(idCarpeta, this.capas);
+        const capaPadre = this.capas.buscarGrupoCapas(idCarpeta);
         if (capaPadre) {
             this.conteoGrupoCapas++;
-            const nuevaCapa = new grupoCapas(capaPadre, this.conteoGrupoCapas, this.confCapas.anchoCanvas, this.confCapas.altoCanvas);
-            absoluteArt.lienzo.capasGrupoVivas.push(nuevaCapa)
-            this.grupoCapasActiva = nuevaCapa;
-            this.buscarGrupoCapas(idCarpeta, this.capas).contenido.push(nuevaCapa);
+
+            const confCapa = this.confCapas;
+            confCapa.capaPadre = capaPadre;
+            confCapa.idCarpeta = this.conteoGrupoCapas;
+
+            this.grupoCapasActiva = capaPadre.agregarGrupoCapas(confCapa);
+            this.capasGrupoVivas.push(this.grupoCapasActiva);
+        }
+    },
+
+    eliminarCapa(id) { // eliminarCapa(id) 
+        const capaPadre = this.capas.buscarCapa(id)?.capaPadre;
+        if (this.capasIndividualesVivas.length > 1 && capaPadre !== undefined) {
+            if (capaPadre.eliminarCapa(id)) {
+
+                let i = 0;
+                let capaVivaEliminada = false;
+                while (i < this.capasIndividualesVivas.length && !capaVivaEliminada) {
+                    if (this.capasIndividualesVivas[i].id === id) {
+                        this.capasIndividualesVivas.splice(i, 1);
+                        capaVivaEliminada = true;
+                    }
+                    i++;
+                }
+                this.capaActiva = this.capasIndividualesVivas[0]
+            }
         }
     },
 
     eliminarGrupoCapas(id) {
-        if (this.capasGrupoVivas.length > 0 && id !== 0) {
-            const contenidoPadre = this.buscarGrupoCapas(id, this.capas).capaPadre.contenido;
-            let i = 0
-            let capaEliminada = false
-            while (i < contenidoPadre.length && !capaEliminada) {
-                if (contenidoPadre[i].id === id && contenidoPadre[i].tipoCapa === "grupo") {
-                    capaEliminada = true;
-                    contenidoPadre.splice(i, 1);
-                    let cont = 0;
-                    let capaVivaEliminada = false;
-                    while (cont < this.capasGrupoVivas.length && !capaVivaEliminada) {
-                        if (this.capasGrupoVivas[i].id === id && contenidoPadre[i].tipoCapa === "grupo") {
-                            this.capasGrupoVivas.splice(i, 1);
-                            capaVivaEliminada = true;
-                        }
-                        cont++;
+        const capaPadre = this.capas.buscarGrupoCapas(id)?.capaPadre;
+        if (this.capasGrupoVivas.length > 0 && capaPadre !== undefined && id !== 0) {
+            if (capaPadre.eliminarGrupoCapas(id)) {
+
+                let i = 0;
+                let capaVivaEliminada = false;
+                while (i < this.capasGrupoVivas.length && !capaVivaEliminada) {
+                    if (this.capasGrupoVivas[i].id === id) {
+                        this.capasGrupoVivas.splice(i, 1);
+                        capaVivaEliminada = true;
                     }
-
+                    i++;
                 }
-                i++
+                this.grupoCapasActiva = this.capasGrupoVivas[0]
             }
         }
     },
-
-    buscarGrupoCapas(id, lista) {
-        if (id <= this.conteoGrupoCapas && id === 0) {
-            return lista;
-        }
-        if (lista.contenido.length > 0) {
-
-            for (const lugar of lista.contenido) {
-                if (lugar.tipoCapa === 'grupo' && lugar.id === id) {
-                    return lugar;
-                }
-                if (lugar.contenido) {
-                    const encontrado = this.buscarGrupoCapas(id, lugar);
-                    if (encontrado) return encontrado;
-                }
-            }
-        }
-    },
-
-    buscarCapa(id, lista) {
-        if (id <= this.conteoCapas && lista.contenido.length > 0) {
-            for (const lugar of lista.contenido) {
-                if (lugar.tipoCapa === 'individual' && lugar.id === id) {
-                    return lugar;
-                }
-                if (lugar.contenido) {
-                    const encontrado = this.buscarGrupoCapas(id, lugar);
-                    if (encontrado !== undefined) return encontrado;
-                }
-            }
-        }
-    }
 }
 absoluteArt.herramientasCanvas = {
     vaciar(ctx) {
@@ -481,7 +502,7 @@ absoluteArt.dibujo = { // seccion de figuras pinceles y cualquier cosa que sea d
                         (esquinas[2].y - esquinas[0].y) | 0);
                 }
 
-                ctx.stroke() // hasta aca es linea rectangular pa haya es el relleno
+                ctx.stroke() // Desde aca es linea rectangular pa haya es el relleno
 
 
                 /*
