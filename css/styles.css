@@ -82,8 +82,8 @@ body {
 }
 
 #canvasPrincipal {
-    height: 360px;
-    width: 640px;
+    height: 720px;
+    width: 1280px;
     background-color: white;
     position: absolute;
     top: 50%;
@@ -152,7 +152,7 @@ select {
 
 .representacionCapas {
     width: 100%;
-    height: 62.8vh;
+    height: 72.8vh;
     background-color: red;
     display: flex;
     flex-direction: column;
@@ -192,8 +192,6 @@ select {
     gap: 1vh;
     justify-content: space-between;
 }
-
-
 
 .representacionCapa input {
     display: none;
@@ -274,4 +272,89 @@ select {
 
 .activo{
     background-color: lightgreen;
+}
+
+#configuracionCapaActual{
+    background-color: powderblue;
+    width: 30vh;
+    height: 70vh;
+    position: absolute;
+    top: 16.6vh;
+    right: 42.5vh;
+    z-index: 1000;
+
+    display: flex;
+    flex-direction: column;
+    padding: 1vh;
+    gap: 1vh;
+}
+
+#configuracionCapaActual > p{
+    font-size: 2vh;
+
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: start;
+    padding-left: 1vh;
+    font-weight:bolder;
+    background-color: lightgreen;
+    letter-spacing: 0.2vh;
+}
+
+#configuracionCapaActual .variablesCapa{
+    background-color: blueviolet;
+    height: 50%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 4%;
+}
+
+.variablesCapa .variableCapa{
+    display: flex;
+    flex-direction: column;
+    font-weight: bold;
+    font-size: 2vh;
+    width: 100%;
+    height: 17%;
+    background-color: rgb(219, 91, 91);
+    padding:0 1vh;
+}
+
+#configuracionCapaActual .acciones{
+    background-color: darkcyan;
+    width: 100%;
+    height: 45%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+}
+
+#cerrarConfCapa{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bolder;
+    color: red;
+    width: 3vh;
+    height: 3vh;
+    aspect-ratio: 1/1;
+    background-color: black;
+    position: absolute;
+    right: 1%;
+    font-size: 3vh;
+}
+
+.cambiarGrupo select{
+    width: 65%;
+    height: 100%;
+}
+
+
+.variablesCapa .variableCapa button{
+    width: 30%;
+}
+
+.cambiarGrupo{
+    display: flex;
+    justify-content: space-between;
 }

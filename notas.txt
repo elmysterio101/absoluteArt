@@ -1,0 +1,32 @@
+Funcionalidades que quiero : 
+
+historial por capas y global
+
+capas 
+duplicacion de capas/grupos
+fusion de capas
+grupos capas
+mascaras de capas
+¿mesa de trabajo? si entiendo que es capas le hago
+movilidad y redimencion de capas
+
+rotacion y velteo de capas
+
+herramienta de recorte ( por formas y libre )
+herramientas de dibujo con opacidad y color doble ( relleno y contorno ) , ademas de personaliables utilizando canvas como base ( ya sea opacidad forma o degrade)
+herramientas sensibles a la veloidad / intensidad
+borradores especiales ( con opacidad, eleccion de color , tolerancia ,formas)
+baldes especiales (tolerancia de opacidad y color, multiples colores, degradados, patrones)
+
+insertado de imagenes
+
+guardado de archivos con multiples tipos
+
+implementar todo que viva dentro de 1 solo canvas 
+es decir
+
+sistema de interfaz
+
+aclaracion( quiero utilizar 1 o varios canvas como mascara para los pinceles, no dibujar directamente en el canvas de 
+            la capa sino utilizar 1 o varios canvas como mascaras ya sea para un patronees , degradados , opacidades mixtas, 
+            imagenes , o cualquier tipo de cosa que se quiera)

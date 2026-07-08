@@ -9,26 +9,55 @@
 </head>
 
 <body>
-    <div class="configuracionCapa" id="" style="display: none;">
-        <div class="opacidadCapa">
-            <div class="configCapa">
-                <div class="atributoCapa">
-                    Editable
-                    <input type="checkbox" name="" id="" checked>
-                </div>
-                <div class="atributoCapa">
-                    visible
-                    <input type="checkbox" name="" id="" checked>
+
+    <div class="configuracionCapa" id="configuracionCapaActual">
+        <button id="cerrarConfCapa" type="button"
+            onclick="document.getElementById('configuracionCapaActual').style.display = 'none'">x</button>
+
+        <p id="nombreCapaConfigurada">nombreCapa</p>
+        <div class="variablesCapa">
+            <div class="variableCapa">
+                <p id="letreroCapaOpacidad">opacidad : 1</p>
+                <input type="range" name="" id="capaOpacidad" step="0.01" min="0" max="1" value="1"
+                    oninput="cambiarOpacidadCapa()">
+            </div>
+            <div class="variableCapa">
+                <p id="LetreroCapaVisibilidad">visible : true</p>
+                <input type="checkbox" name="" id="capaVisibilidad" checked onchange="cambiarVisibilidadCapa()">
+            </div>
+            <div class="variableCapa">
+                <p id="letreroCapaEditabilidad">editable : true</p>
+                <input type="checkbox" name="" id="capaEditabilidad" checked onchange="cambiarEditabilidadCapa()">
+            </div>
+            <div class="variableCapa">
+                <p id="letreroCapaPadre">selector capa padre</p>
+                <div class="cambiarGrupo">
+                    <select name="" id="selectorCapaPadre">
+                    </select>
+
+                    <button type="button" onclick="cambiarCapaGrupo()">cambiar</button>
                 </div>
 
-                <div class="atributoCapa">
-                    opacidad
-                    <input type="number" name="" id="" max="1" min="0" step="0.1">
-                </div>
             </div>
-            <div class="accionesCapa">
-                <button type="button"></button>
+            <div class="variableCapa">
+                <p>cordenadaX : </p>
+                <input type="number" name="" id="capaCordenadaX" value="0" step="1">
             </div>
+            <div class="variableCapa">
+                <p>cordenadaY : </p>
+                <input type="number" name="" id="capaCordenadaY" value="0" step="1">
+            </div>
+
+        </div>
+
+        <div class="acciones">
+            <button type="button" onclick="duplicarCapa() ">duplicar capa</button>
+            <button type="button" onclick="moverCapaLista(capaActual, 1) ">mover arriba capa</button>
+            <button type="button" onclick="moverCapaLista(capaActual, -1) ">mover abajo capa</button>
+            <button type="button">Editar capa individual</button>
+            <button type="button">Mover capa(canvas)</button>
+            <button type="button">Redimenzionar capa</button>
+            <button type="button" onclick="eliminarCapaActual()">Eliminar capa</button>
         </div>
     </div>
 
@@ -73,18 +102,18 @@
             <div class="configuracionLapizFondo">
                 <div class="rango">
                     <p>grosor</p>
-                    <input type="range" name="" min="1" value="1" max="200" step="1" id="grosor"
+                    <input type="range" name="" min="1" value="100" max="400" step="1" id="grosor"
                         oninput="grosor = document.getElementById('grosor').value,
                                                                                                          document.getElementById('cartelGrosor').innerHTML = grosor">
-                    <p id="cartelGrosor">1</p>
+                    <p id="cartelGrosor">100</p>
                 </div>
 
                 <div class="rango">
                     <p>opprin</p>
-                    <input type="range" name="" min="0" value="1" max="1" step="0.01" id="opacidadPrincipal"
+                    <input type="range" name="" min="0" value="0.3" max="1" step="0.01" id="opacidadPrincipal"
                         oninput="opacidadPrincipal = document.getElementById('opacidadPrincipal').value,
                                                                                                          document.getElementById('cartelOpacPrin').innerHTML = opacidadPrincipal">
-                    <p id="cartelOpacPrin">1</p>
+                    <p id="cartelOpacPrin">0.3</p>
                 </div>
 
                 <div class="rango">
@@ -99,7 +128,7 @@
             <div class="visualizacionHistorial"></div>
         </div>
 
-        <canvas height="1080" width="1920" id="canvasPrincipal">
+        <canvas height="720" width="1280" id="canvasPrincipal">
 
         </canvas>
 
@@ -120,33 +149,33 @@
                         </label>
                         <button type="button" class="infoPlegado" onclick="seleccionarCapa(0 , 'grupo')">
                             <p class="nombreCapa"> grupo 0</p>
-                            <canvas id="canvasGrupoCapas0"></canvas>
+                            <canvas id="canvasgrupocapa0" height="720" width="1280"></canvas>
                         </button>
                     </div>
                     <div class="contenido" id="contenido0">
 
-                        <div class="representacionCapa representacionCapaGrupo capaIndividual activo" id="representacionCapa0">
-                            <input type="checkbox" name="" class="input" id="visibilidadCapa0 onchange= "cambiarVisibilidadCapa('individual' , 0)">
+                        <div class="representacionCapa representacionCapaGrupo capaIndividual activo"
+                            id="representacionCapa0">
+                            <input type="checkbox" name="" class="input" id="visibilidadCapa0 onchange= "
+                                cambiarVisibilidadCapa('individual' , 0)">
                             <div class="portada">
                                 <label for="visibilidadCapa0" class="plegado">
                                     <p>0</p>
                                 </label>
                                 <button type="button" class="infoPlegado" onclick="seleccionarCapa(0 , 'individual')">
                                     <p class="nombreCapa"> capa 0</p>
-                                    <canvas id="canvasGrupoCapas0"></canvas>
+                                    <canvas id="canvasindividualcapa0" height="720" width="1280"></canvas>
                                 </button>
                             </div>
                         </div>
-                    
+
                     </div>
                 </div>
 
 
 
             </div>
-            <div class="editar-capa">
-                <button type="button" onclick="">editar capa</button>
-            </div>
+
         </div>
     </section>
     <div class="barraEstatus">

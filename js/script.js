@@ -22,17 +22,15 @@ function revertirTrazo() {
     if (absoluteArt.lienzo.capaActiva.historial.historialTrazos.length > 0) {
         absoluteArt.herramientasCanvas.vaciar(ctx)
         absoluteArt.lienzo.capaActiva.historial.revertirTrazo()
-        absoluteArt.lienzo.renderizarCapas(ctx)
-        actualizarCanvasEnPantalla(absoluteArt.lienzo.capaActiva);
+        absoluteArt.lienzo.capas.renderizar(ctx)
     }
 }
 
 function recuperarTrazo() {
-    if (absoluteArt.lienzo.capas[absoluteArt.lienzo.capaActiva].historial.trazosRevertidos.length > 0) {
+    if (absoluteArt.lienzo.capaActiva.historial.trazosRevertidos.length > 0) {
         absoluteArt.herramientasCanvas.vaciar(ctx)
-        absoluteArt.lienzo.capas[absoluteArt.lienzo.capaActiva].historial.recuperarTrazo()
-        absoluteArt.lienzo.renderizarCapas(ctx)
-        actualizarCanvasEnPantalla(absoluteArt.lienzo.capaActiva);
+        absoluteArt.lienzo.capaActiva.historial.recuperarTrazo()
+        absoluteArt.lienzo.capas.renderizar(ctx)
     }
 }
 
@@ -56,17 +54,18 @@ function listarHerramientas() {
 
 listarHerramientas();
 let tipoHerramienta = 'dibujo';
-let categoriaHerramienta = 'figuras';
-let herramienta = 'lineaBrusca';
+let categoriaHerramienta = 'pinceles';
+let herramienta = 'clasico';
 let colorPrincipal = { r: 0, g: 0, b: 0 };
 let colorSecundario = { r: 0, g: 0, b: 0 };
-let grosor = 1;
-let opacidadPrincipal = 1;
+let grosor = 100;
+let opacidadPrincipal = 0.3;
 let opacidadSecundaria = 1;
 let recorrido = [];
 
 const listaCapas = document.getElementById('listaCapas');
 
+let capaActual = absoluteArt.lienzo.capas.buscarCapa(0)
 
 function obtenerParametros() {
     return {
@@ -85,41 +84,121 @@ function obtenerParametros() {
     }
 }
 
+function cambiarOpacidadCapa() {
+    capaActual.opacidad = Number(document.getElementById('capaOpacidad').value)
+    document.getElementById('letreroCapaOpacidad').innerHTML = 'opacidad : ' + capaActual.opacidad;
+}
+
+function cambiarVisibilidadCapa() {
+    capaActual.visible = document.getElementById('capaVisibilidad').checked
+    document.getElementById('LetreroCapaVisibilidad').innerHTML = 'visible : ' + capaActual.visible;
+}
+
+function cambiarEditabilidadCapa() {
+    capaActual.editable = document.getElementById('capaEditabilidad').checked
+    document.getElementById('letreroCapaEditabilidad').innerHTML = 'editable : ' + capaActual.editable;
+}
+
+const confCapa = document.getElementById('configuracionCapaActual');
+
+function abrirConfiguracionCapa() {
+    confCapa.style.display = "flex";
+    let capa;
+    if (tipoCapaActiva === 'grupo') {
+        capaActual = absoluteArt.lienzo.capas.buscarGrupoCapas(idGrupoActivo);
+    } else {
+        capaActual = absoluteArt.lienzo.capas.buscarCapa(idCapaActiva);
+    }
+
+    actualizarSelectorCapaPadre();
+
+    document.getElementById('nombreCapaConfigurada').innerHTML = capaActual.nombre
+
+    document.getElementById('letreroCapaOpacidad').innerHTML = 'opacidad : ' + capaActual.opacidad;
+    document.getElementById('capaOpacidad').value = capaActual.opacidad;
+
+    document.getElementById('LetreroCapaVisibilidad').innerHTML = 'visible : ' + capaActual.visible;
+    document.getElementById('capaVisibilidad').checked = capaActual.visible;
+
+    document.getElementById('letreroCapaEditabilidad').innerHTML = 'editable : ' + capaActual.editable;
+    document.getElementById('capaEditabilidad').checked = capaActual.editable;
+
+}
+
 let idGrupoActivo = 0;
 let idCapaActiva = 0;
+let tipoCapaActiva = 'grupo';
 
 function seleccionarCapa(id, tipo) {
     if (tipo === 'individual') {
-        const capa = absoluteArt.lienzo.capas.buscarCapa(id);
-        console.log(id, absoluteArt.lienzo.capas)
-        absoluteArt.lienzo.capaActiva = capa;
-        idCapaActiva = capa.id
-        console.log(capa)
-        document.querySelector('.activo').classList.remove('activo')
+        tipoCapaActiva = 'individual';
+        capaActual = absoluteArt.lienzo.capas.buscarCapa(id);
+        absoluteArt.lienzo.capaActiva = capaActual;
+
+        idCapaActiva = id;
+        const eliminar = document.querySelector('.activo')
+        if (eliminar) {
+            eliminar.classList.remove('activo')
+        }
         document.getElementById('representacionCapa' + id).classList.add('activo')
+        abrirConfiguracionCapa()
+        abrirCapasPadre(capaActual)
     } else if (tipo === 'grupo') {
-        absoluteArt.lienzo.grupoCapasActiva = absoluteArt.lienzo.capas.buscarGrupoCapas(id);
+
+        tipoCapaActiva = 'grupo';
+        capaActual = absoluteArt.lienzo.capas.buscarGrupoCapas(id);
+        absoluteArt.lienzo.grupoCapasActiva = capaActual;
         idGrupoActivo = id;
 
-        console.log(document.querySelector('.activo').classList)
-        document.querySelector('.activo').classList.remove('activo')
+        const eliminar = document.querySelector('.activo')
+        if (eliminar) {
+            eliminar.classList.remove('activo')
+        }
         document.getElementById('representacionGrupo' + id).classList.add('activo')
+        abrirConfiguracionCapa()
+        if (capaActual.id !== 0) {
+            abrirCapasPadre(capaActual)
+        }
     } else {
         console.log("errorsito bro")
     }
+}
 
+function abrirCapasPadre(capa) {
+    if (capa.capaPadre) {
+        document.getElementById('desplegableCapa' + capa.capaPadre.id).checked = true;
+        if (capa.capaPadre.capaPadre) {
+            abrirCapasPadre(capa.capaPadre)
+        }
+    }
 }
 
 function agregarCapaDom(tipo) {
     const ubic = document.getElementById('contenido' + idGrupoActivo);
 
     if (tipo === 'grupo') {
-        console.log(idGrupoActivo)
         absoluteArt.lienzo.agregarGrupoCapas(idGrupoActivo);
         const capa = absoluteArt.lienzo.grupoCapasActiva
         idGrupoActivo = capa.id
 
-        ubic.insertAdjacentHTML('afterbegin', `
+        agregarCapaGrupo(ubic, capa);
+
+        seleccionarCapa(idGrupoActivo, 'grupo')
+
+    } else if (tipo === 'individual') {
+
+        absoluteArt.lienzo.agregarCapa(idGrupoActivo);
+        const capa = absoluteArt.lienzo.capaActiva
+        capaActiva = capa.id
+
+        agregarCapaIndividual(ubic, capa)
+
+        seleccionarCapa(capa.id, 'individual')
+    }
+}
+
+function agregarCapaGrupo(ubicacion, capa) {
+    ubicacion.insertAdjacentHTML('afterbegin', `
         <div class="representacionCapa representacionCapaGrupo" id="representacionGrupo${capa.id}" ">
                     <input type="checkbox" name="" class="input" id="desplegableCapa${capa.id}">
 
@@ -129,7 +208,7 @@ function agregarCapaDom(tipo) {
                         </label>
                         <button type="button" class="infoPlegado" onclick="seleccionarCapa(${capa.id} , 'grupo')">
                             <p class="nombreCapa"> ${capa.nombre}</p>
-                            <canvas id="canvasGrupoCapas${capa.id}"></canvas>
+                            <canvas id="canvasgrupocapa${capa.id}" height="${capa.canvas.height}" width="${capa.canvas.width}" "></canvas>
                         </button>
                     </div>
                     <div class="contenido" id="contenido${capa.id}">
@@ -137,14 +216,10 @@ function agregarCapaDom(tipo) {
                 </div>
 
         `);
-        seleccionarCapa(capa.id, 'grupo')
+}
 
-    } else if (tipo === 'individual') {
-        console.log(idGrupoActivo)
-        absoluteArt.lienzo.agregarCapa(idGrupoActivo);
-        const capa = absoluteArt.lienzo.capaActiva
-
-        ubic.insertAdjacentHTML('afterbegin', `
+function agregarCapaIndividual(ubicacion, capa) {
+    ubicacion.insertAdjacentHTML('afterbegin', `
         <div class="representacionCapa representacionCapaGrupo capaIndividual" id="representacionCapa${capa.id}">
                     <input type="checkbox" name="" class="input" id="visibilidadCapa${capa.id} onchange= "cambiarVisibilidadCapa('individual' , ${capa.id})"">
 
@@ -154,22 +229,150 @@ function agregarCapaDom(tipo) {
                         </label>
                         <button type="button" class="infoPlegado" onclick="seleccionarCapa(${capa.id} , 'individual')">
                             <p class="nombreCapa"> ${capa.nombre}</p>
-                            <canvas id="canvasGrupoCapas${capa.id}"></canvas>
+                            <canvas id="canvasindividualcapa${capa.id}" height="${Number(capa.canvas.height)}" width="${Number(capa.canvas.width)}" ></canvas>
                         </button>
                     </div>
                 </div>
 
         `);
-        seleccionarCapa(capa.id, 'individual')
+}
+
+function agregarContenidoGrupo(grupo) {
+    const ubic = document.getElementById('contenido' + grupo.id)
+    const borrar = ubic.querySelectorAll('.representacionCapa');
+    for (const cap of borrar) {
+        cap.remove()
+    }
+
+    for (const capa of grupo.contenido) {
+        if (capa.tipoCapa === 'grupo') {
+            agregarCapaGrupo(ubic, capa)
+            if (capa.contenido !== 0) {
+                agregarContenidoGrupo(capa)
+            }
+        } else {
+            agregarCapaIndividual(ubic, capa)
+        }
+    }
+
+}
+
+function eliminarCapaActual() {
+    let capaDios = false;
+    if (capaActual.tipoCapa === 'grupo') {
+        if (capaActual.id === 0) {
+            capaDios = true
+        }
+    }
+    if (!capaDios) {
+        if (capaActual.tipoCapa === 'grupo') {
+            absoluteArt.lienzo.eliminarGrupoCapas(capaActual.id);
+            document.getElementById('representacionGrupo' + capaActual.id).remove()
+        } else {
+            absoluteArt.lienzo.eliminarCapa(capaActual.id);
+            document.getElementById('representacionCapa' + capaActual.id).remove()
+        }
+        capaActual = absoluteArt.lienzo.capas
+        seleccionarCapa(capaActual.id, capaActual.tipoCapa)
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+        absoluteArt.lienzo.capas.renderizar(ctx);
+        sincronizarCapaCanvasReal(capaActual);
+    }
+
+}
+
+function sincronizarCapaCanvasReal(capa) {
+    const ctxActual = document.getElementById('canvas' + capa.tipoCapa + 'capa' + capa.id).getContext('2d');
+    ctxActual.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+    capa.renderizar(ctxActual)
+    if (capa.capaPadre !== undefined) {
+        sincronizarCapaCanvasReal(capa.capaPadre)
+    }
+}
+
+function moverCapaLista(capa, movimiento) {
+    const indiceCapa = capa.capaPadre.obtenerIndiceCapa(capa);
+    if (indiceCapa + movimiento >= 0 && indiceCapa + movimiento < capa.capaPadre.contenido.length) {
+        capa.capaPadre.moverCapaIndice(capa, indiceCapa + movimiento)
+        let capaMover;
+        if (capaActual.tipoCapa === 'grupo') {
+            capaMover = document.getElementById('representacionGrupo' + capaActual.id)
+        } else {
+            capaMover = document.getElementById('representacionCapa' + capaActual.id)
+        }
+        agregarContenidoGrupo(capa.capaPadre)
+
+    }
+    seleccionarCapa(capa.id, capa.tipoCapa)
+}
+
+function duplicarCapa() {
+    console.log(capaActual, 'duplicada')
+    absoluteArt.lienzo.clonarCapa(capaActual.capaPadre, capaActual)
+    agregarContenidoGrupo(absoluteArt.lienzo.capas)
+    seleccionarCapa(capaActual.id, capaActual.tipoCapa)
+}
+
+function actualizarSelectorCapaPadre() {
+    const select = document.getElementById('selectorCapaPadre')
+    for (const borrar of select.querySelectorAll('option')) {
+        borrar.remove();
+    }
+
+    for (const capa of absoluteArt.lienzo.capasGrupoVivas) {
+        if (capaActual !== capa) {
+            let capaHijo = true;
+            if (capaActual.tipoCapa === 'grupo') {
+                if (capaActual.buscarGrupoCapas(capa.id) !== undefined) {
+                    capaHijo = false;
+                }
+            }
+            if (capaHijo) {
+                if (capaActual.capaPadre === capa) {
+                    select.insertAdjacentHTML('afterbegin', `
+                    <option value="${capa.id} ">
+                        ${capa.nombre}
+                    </option>
+                `);
+                } else {
+                    select.insertAdjacentHTML('afterbegin', `
+                        <option value="${capa.id}"  ">
+                            ${capa.nombre}
+                        </option>
+                    `);
+                }
+            }
+
+        }
+    }
+
+    const capaDios = absoluteArt.lienzo.capas;
+    if (capaActual !== capaDios) {
+        if (capaActual.capaPadre === capaDios) {
+            select.insertAdjacentHTML('afterbegin', `
+                <option value="${capaDios.id} ">
+                    ${capaDios.nombre}
+                </option>
+            `);
+        } else {
+            select.insertAdjacentHTML('afterbegin', `
+                <option value="${capaDios.id}" ">
+                    ${capaDios.nombre}
+                </option>
+                `);
+        }
+
 
     }
 
 }
 
-function actualizarCanvasEnPantalla(capa, ctx) {
-    capa.renderizar(ctx)
+function cambiarCapaGrupo() {
+    const nuevaCapaPadre = absoluteArt.lienzo.capas.buscarGrupoCapas(Number(document.getElementById('selectorCapaPadre').value));
+    absoluteArt.lienzo.capas.moverCapaDeGrupo(capaActual, nuevaCapaPadre)
+    agregarContenidoGrupo(absoluteArt.lienzo.capas)
+    seleccionarCapa(capaActual.id, capaActual.tipoCapa)
 }
-
 let parametros = obtenerParametros();
 let clickeando = false;
 
@@ -205,6 +408,8 @@ canvas.addEventListener('mouseup', (e) => {
     recorrido.push(absoluteArt.utiles.adaptarCordCanvas(e.clientX, e.clientY, ctx))
     parametros = obtenerParametros();
     absoluteArt.lienzo.capaActiva.historial.guardarHistorial(parametros);
-    actualizarCanvasEnPantalla(absoluteArt.lienzo.capas, ctx);
+    absoluteArt.lienzo.capas.renderizar(ctx);
+    sincronizarCapaCanvasReal(capaActual);
 });
+
 

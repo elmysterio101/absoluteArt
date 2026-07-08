@@ -13,7 +13,7 @@ class historial {
 
     revertirTrazo() {
         if (this.historialTrazos.length > 0) {
-            absoluteArt.herramientasCanvas.vaciar(this.ctx);
+            this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height)
             this.trazosRevertidos.push(this.historialTrazos[this.historialTrazos.length - 1])
             if (this.historialCapturas.length > 0) {
                 if (this.historialCapturas[this.historialCapturas.length - 1].indice === this.historialTrazos.length - 1) {
@@ -21,7 +21,7 @@ class historial {
                 }
             }
             this.historialTrazos.pop()
-            this.pintarHistorial();
+            this.pintarHistorial(this.ctx);
         }
     }
     recuperarTrazo() {
@@ -29,19 +29,16 @@ class historial {
             this.historialTrazos.push(this.trazosRevertidos[this.trazosRevertidos.length - 1])
             this.trazosRevertidos.pop();
             const ultTrazo = this.historialTrazos[this.historialTrazos.length - 1];
-            absoluteArt[ultTrazo.contexto.tipoHerramienta]?.[ultTrazo.contexto.categoriaHerramienta]?.[ultTrazo.contexto.herramienta](ultTrazo, this.ctx)
-                ?? absoluteArt[ultTrazo.contexto.tipoHerramienta]?.[ultTrazo.contexto.herramienta]?.(ultTrazo, this.ctx);
+            absoluteArt.utiles.pintarTrazo(ultTrazo, this.ctx)
         }
     }
-    guardarHistorial(conf) {
-        this.guardarTrazo(conf);
-        if (this.debeGuardarCaptura(conf)) {
-            absoluteArt[conf.contexto.tipoHerramienta]?.[conf.contexto.categoriaHerramienta]?.[conf.contexto.herramienta](conf, this.ctx)
-                ?? absoluteArt[conf.contexto.tipoHerramienta]?.[conf.contexto.herramienta]?.(conf, this.ctx);
-            this.guardarCaptura(conf);
+    guardarHistorial(trazo) {
+        this.guardarTrazo(trazo);
+        if (this.debeGuardarCaptura(trazo)) {
+            absoluteArt.utiles.pintarTrazo(trazo, this.ctx)
+            this.guardarCaptura(trazo);
         } else {
-            absoluteArt[conf.contexto.tipoHerramienta]?.[conf.contexto.categoriaHerramienta]?.[conf.contexto.herramienta](conf, this.ctx)
-                ?? absoluteArt[conf.contexto.tipoHerramienta]?.[conf.contexto.herramienta]?.(conf, this.ctx);
+            absoluteArt.utiles.pintarTrazo(trazo, this.ctx)
         }
     }
     guardarTrazo(trazo) {
@@ -52,6 +49,48 @@ class historial {
             this.historialTrazos.push(absoluteArt.utiles.borrarRecorridoIntermedio(trazo))
         }
     }
+    pintarHistorial(ctx) {
+        if (this.historialTrazos.length > 0) {
+            this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height)
+            this.cargarUltimaCaptura();
+
+
+            const cantTrazos = this.trazosDesdeUltimaCaptura();
+            const trazos = this.historialTrazos;
+            for (let i = 0; i < cantTrazos; i++) {
+                const indiceTrazo = trazos.length - cantTrazos + i;
+                const trazoActual = trazos[indiceTrazo];
+                absoluteArt.utiles.pintarTrazo(trazoActual, this.ctx)
+            }
+            //absoluteArt.herramientasCanvas.pintarTrazos(this.trazosDesdeUltimaCaptura(), this.historialTrazos, this.ctx)
+        }
+    }
+    guardarCaptura() {
+        const canvasTrucho = document.createElement("canvas")
+        canvasTrucho.width = this.ctx.canvas.width
+        canvasTrucho.height = this.ctx.canvas.height
+        const ctxTrucho = canvasTrucho.getContext('2d')
+        ctxTrucho.drawImage(this.ctx.canvas, 0, 0)
+        this.historialCapturas.push({ captura: canvasTrucho, indice: this.historialTrazos.length })
+
+        if (this.historialCapturas.length > this.limiteCapturasHistorial) {
+            this.historialCapturas.splice(0, 1)
+        }
+    }
+    debeGuardarCaptura(trazo) {
+        let guardarEstado = false;
+        if (this.trazosDesdeUltimaCaptura() >= this.frecuenciaTrazos ||
+            trazo.contexto.recorrido.length >= this.trayectoMuyLargo && trazo.contexto.categoriaHerramienta === "pinceles" ||
+            this.historialCapturas.length == 0 && this.historialTrazos.length >= this.frecuenciaTrazos) {
+            guardarEstado = true;
+        }
+        return guardarEstado;
+    }
+    renderizarUltimaCaptura(ctx) {
+        if (this.historialCapturas.length > 0) {
+            ctx.drawImage(this.historialCapturas[this.historialCapturas.length - 1].captura, 0, 0)
+        }
+    }
     trazosDesdeUltimaCaptura() { //
         let cantidadTrazos = this.historialTrazos.length;
         if (this.historialCapturas.length > 0) {
@@ -59,41 +98,11 @@ class historial {
         }
         return cantidadTrazos;
     }
-    guardarCaptura(conf) {
-        if (this.historialCapturas.length - 1 >= this.limiteCapturasHistorial) {
-            this.historialCapturas.splice(0, 1)
-        }
-        const canvasTrucho = document.createElement("canvas")
-        canvasTrucho.width = this.ctx.canvas.width
-        canvasTrucho.height = this.ctx.canvas.height
-        const ctxTrucho = canvasTrucho.getContext('2d')
-        ctxTrucho.drawImage(canvas, 0, 0)
-        this.historialCapturas.push({ captura: canvasTrucho, indice: this.historialTrazos.length - 1 })
-    }
-    debeGuardarCaptura(conf) {
-        let guardarEstado = false;
-        if (this.trazosDesdeUltimaCaptura() >= this.frecuenciaTrazos ||
-            conf.contexto.recorrido.length >= this.trayectoMuyLargo && conf.contexto.categoriaHerramienta === "pinceles" ||
-            this.historialCapturas.length == 0 && this.historialTrazos.length >= this.frecuenciaTrazos) {
-            guardarEstado = true;
-        }
-        return guardarEstado;
-    }
-    pintarHistorial() {
-        if (this.historialTrazos.length > 0) {
-            this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height)
-            this.cargarUltimaCaptura();
-
-
-            const cantTrazos = this.trazosDesdeUltimaCaptura();
-            const trazos = this.historialCapturas;
-            for (let i = 0; i < cantTrazos; i++) {
-                const indiceTrazo = trazos.length - cantTrazos + i;
-                const trazoActual = trazos[indiceTrazo];
-                absoluteArt[trazoActual.contexto.tipoHerramienta]?.[trazoActual.contexto.categoriaHerramienta]?.[trazoActual.contexto.herramienta](trazoActual, this.ctx)
-                    ?? absoluteArt[trazoActual.contexto.tipoHerramienta]?.[trazoActual.contexto.herramienta]?.(trazoActual, this.ctx);
+    cargarTodosLosTrazos(ctx){
+        if(this.historialTrazos.length > 0){
+            for(const trazo of this.historialTrazos){
+                absoluteArt.utiles.pintarTrazo(trazo, ctx)
             }
-            //absoluteArt.herramientasCanvas.pintarTrazos(this.trazosDesdeUltimaCaptura(), this.historialTrazos, this.ctx)
         }
     }
     cargarUltimaCaptura() { // sin razon de cambio
@@ -102,7 +111,60 @@ class historial {
             this.ctx.drawImage(captura, 0, 0)
         }
     }
+    clonarHistorialTrazos(historial) {
+        const clonHistorial = []
+        for (let i = 0; i < historial.length; i++) {
+            const trazo = historial[i];
+            const trazoCopiado = {
+                colorPrincipal: { r: trazo.colorPrincipal.r, g: trazo.colorPrincipal.g, b: trazo.colorPrincipal.b },
+                colorSecundario: { r: trazo.colorSecundario.r, g: trazo.colorSecundario.g, b: trazo.colorSecundario.b },
+                contexto: {
+                    categoriaHerramienta: trazo.contexto.categoriaHerramienta,
+                    herramienta: trazo.contexto.herramienta,
+                    tipoHerramienta: trazo.contexto.tipoHerramienta
+                },
+                grosorLinea: trazo.grosorLinea,
+                opacidadPrincipal: trazo.opacidadPrincipal,
+                opacidadSecundaria: trazo.opacidadSecundaria
+            }
+
+            const recorrido = [];
+
+            for (let n = 0; n < trazo.contexto.recorrido.length; n++) {
+                const mov = trazo.contexto.recorrido[n]
+
+                recorrido.push({ x: mov.x, y: mov.y })
+            }
+            trazoCopiado.contexto.recorrido = recorrido
+
+            clonHistorial.push(trazoCopiado)
+        }
+
+        return clonHistorial;
+    }
+    clonarCapturas() {
+        const clonHistorial = []
+        for (let i = 0; i < this.historialCapturas.length; i++) {
+            const capt = this.historialCapturas[i]
+            const canvasClon = document.createElement('canvas');
+            canvasClon.width = capt.captura.width
+            canvasClon.height = capt.captura.height
+            canvasClon.getContext('2d').drawImage(capt.captura, 0, 0)
+
+            clonHistorial.push({ indice: capt.indice, captura: canvasClon })
+        }
+
+        return clonHistorial
+    }
+    clonarArrays() {
+        return {
+            trazosRevertidos: this.clonarHistorialTrazos(this.trazosRevertidos),
+            historialTrazos: this.clonarHistorialTrazos(this.historialTrazos),
+            historialCapturas: this.clonarCapturas()
+        }
+    }
 }
+
 class capaBase {
     constructor(capaPadre, idCapa, anchoCanvas, altoCanvas) {
         this.canvas = document.createElement('canvas')
@@ -122,21 +184,23 @@ class capaBase {
 
     }
 }
+
 class grupoCapas extends capaBase {
     constructor(capaPadre, idCapa, anchoCanvas, altoCanvas) {
         super(capaPadre, idCapa, anchoCanvas, altoCanvas)
         this.nombre = 'grupo ' + idCapa
     }
     tipoCapa = 'grupo';
-
     contenido = [];
-
     renderizar(ctx) {
-        for (const capa of this.contenido) {
-            capa.renderizar(ctx);
+        if (this.visible) {
+            if (this.contenido.length > 0) {
+                for (const capa of this.contenido) {
+                    capa.renderizar(ctx);
+                }
+            }
         }
     }
-
     renderizarHasta(ctx, idCapaLimite) {
         for (const capa of this.contenido) {
             capa.renderizar(ctx);
@@ -145,7 +209,6 @@ class grupoCapas extends capaBase {
             }
         }
     }
-
     renderizarDesde(ctx, idCapaLimite) {
         let capaEncontrada = false;
         for (const capa of this.contenido) {
@@ -158,7 +221,6 @@ class grupoCapas extends capaBase {
             }
         }
     }
-
     buscarCapa(id) {
         if (this.contenido.length > 0) {
             for (const lugar of this.contenido) {
@@ -172,7 +234,6 @@ class grupoCapas extends capaBase {
             }
         }
     }
-
     buscarGrupoCapas(id) {
         if (id === 0) {
             return absoluteArt.lienzo.capas; // capa " dios " digamos
@@ -189,7 +250,6 @@ class grupoCapas extends capaBase {
             }
         }
     }
-
     agregarCapa(confCapas) {
         const nuevaCapa = new capa(
             confCapas.capaPadre,
@@ -202,7 +262,6 @@ class grupoCapas extends capaBase {
         this.contenido.push(nuevaCapa);
         return nuevaCapa;
     }
-
     agregarGrupoCapas(confCapas) {
         const nueveGrupo = new grupoCapas(
             confCapas.capaPadre,
@@ -214,7 +273,6 @@ class grupoCapas extends capaBase {
 
         return nueveGrupo;
     }
-
     eliminarCapa(id) {
         let cont = 0;
         while (cont < this.contenido.length) {
@@ -226,7 +284,6 @@ class grupoCapas extends capaBase {
         }
         return false;
     }
-
     eliminarGrupoCapas(id) {
         let cont = 0;
         while (cont < this.contenido.length) {
@@ -238,7 +295,51 @@ class grupoCapas extends capaBase {
         }
         return false;
     }
+    moverCapaIndice(capa, nuevoIndice) {
+        let i = 0;
+        let movida = false;
+        while (i < this.contenido.length && !movida) {
+            if (this.contenido[i] === capa) {
+                this.contenido.splice(i, 1)
+                this.contenido.splice(nuevoIndice, 0, capa)
+                movida = true;
+            }
+            i++;
+        }
+    }
+    moverCapaDeGrupo(capa, nuevoGrupo) {
+        if (capa?.capaPadre !== nuevoGrupo && capa !== undefined && nuevoGrupo !== undefined) {
+            if (capa.tipoCapa == 'grupo') {
+                capa.capaPadre.eliminarGrupoCapas(capa.id)
+            } else {
+                capa.capaPadre.eliminarCapa(capa.id)
+            }
+            capa.capaPadre = nuevoGrupo;
+            nuevoGrupo.contenido.push(capa)
+        }
+    }
+    obtenerIndiceCapa(capa) {
+        if (capa) {
+            for (let i = 0; i < this.contenido.length; i++) {
+                if (this.contenido[i] === capa) {
+                    console.log(i)
+                    return i;
+                }
+            }
+        }
+    }
+
+    clonar(grupo , id){
+        
+    }
+
+    clonarCapa(id, capa) {
+        const clon = capa.clonar(this, id)
+        this.contenido.push(clon)
+        return clon
+    }
 }
+
 class capa extends capaBase {
     constructor(capaPadre, idCapa, anchoCanvas, altoCanvas, frecuenciaCapturas, trayectoMuyLargo, limiteCapturasHistorial) {
         super(capaPadre, idCapa, anchoCanvas, altoCanvas)
@@ -251,8 +352,46 @@ class capa extends capaBase {
     }
     tipoCapa = 'individual';
 
+    guardarTrazo(trazo) {
+        this.historial.guardarHistorial(trazo);
+    }
+
+    revertirTrazo() {
+        this.historial.revertirTrazo();
+    }
+
+    recuperarTrazo() {
+        this.historial.recuperarTrazo();
+    }
+
     renderizar(ctx) {
-        ctx.drawImage(this.canvas, 0, 0)
+        if (this.visible) {
+            ctx.drawImage(this.canvas, this.x, this.y)
+        }
+    }
+
+    clonar(capaPadre, idCopia) {
+        const clonCapa = new capa(
+            capaPadre,
+            idCopia,
+            this.canvas.width,
+            this.canvas.height,
+            this.historial.frecuenciaTrazos,
+            this.historial.trayectoMuyLargo,
+            this.historial.limiteCapturasHistorial
+        )
+
+        const copiaArrays = this.historial.clonarArrays();
+
+        clonCapa.historial.trazosRevertidos = copiaArrays.trazosRevertidos
+        clonCapa.historial.historialTrazos = copiaArrays.historialTrazos
+        clonCapa.historial.historialCapturas = copiaArrays.historialCapturas
+        clonCapa.historial.ctx = clonCapa.ctx
+
+        clonCapa.ctx.drawImage(this.canvas, 0, 0)
+
+        clonCapa.nombre = this.nombre + ' (copia)'
+        return clonCapa;
     }
 }
 
@@ -260,7 +399,7 @@ absoluteArt.lienzo = {
     confCapas: {
         frecuenciaCapturas: 10,
         trayectoMuyLargo: 1000,
-        limiteCapturasHistorial: 10,
+        limiteCapturasHistorial: 5,
         altoCanvas: 720,
         anchoCanvas: 1280
     }, //no de capa
@@ -286,6 +425,14 @@ absoluteArt.lienzo = {
         }
     },
 
+    clonarCapa(carpeta, capa) { //id carpeta es el padre, capa es la carpeta a clonar
+        if (carpeta.tipoCapa === 'grupo') {
+            this.conteoCapas++
+
+            this.capaActiva = carpeta.clonarCapa(this.conteoCapas, capa);
+            this.capasIndividualesVivas.push(this.capaActiva);
+        }
+    },
     agregarGrupoCapas(idCarpeta) {
         const capaPadre = this.capas.buscarGrupoCapas(idCarpeta);
         if (capaPadre) {
@@ -302,9 +449,8 @@ absoluteArt.lienzo = {
 
     eliminarCapa(id) { // eliminarCapa(id) 
         const capaPadre = this.capas.buscarCapa(id)?.capaPadre;
-        if (this.capasIndividualesVivas.length > 1 && capaPadre !== undefined) {
+        if (capaPadre !== undefined) {
             if (capaPadre.eliminarCapa(id)) {
-
                 let i = 0;
                 let capaVivaEliminada = false;
                 while (i < this.capasIndividualesVivas.length && !capaVivaEliminada) {
@@ -319,9 +465,23 @@ absoluteArt.lienzo = {
         }
     },
 
+    eliminarCapasHijo(capa) {
+        if (capa.contenido.length > 0) {
+            for (let i = capa.contenido.length - 1; i > - 1; i--) {
+                if (capa.contenido[i].tipoCapa === 'grupo') {
+                    this.eliminarGrupoCapas(capa.contenido[i].id)
+                } else {
+                    this.eliminarCapa(capa.contenido[i].id)
+                }
+            }
+        }
+    },
+
     eliminarGrupoCapas(id) {
-        const capaPadre = this.capas.buscarGrupoCapas(id)?.capaPadre;
+        const capaEliminar = this.capas.buscarGrupoCapas(id)
+        const capaPadre = capaEliminar?.capaPadre;
         if (this.capasGrupoVivas.length > 0 && capaPadre !== undefined && id !== 0) {
+            this.eliminarCapasHijo(capaEliminar);
             if (capaPadre.eliminarGrupoCapas(id)) {
 
                 let i = 0;
@@ -336,7 +496,9 @@ absoluteArt.lienzo = {
                 this.grupoCapasActiva = this.capasGrupoVivas[0]
             }
         }
+
     },
+
 }
 absoluteArt.herramientasCanvas = {
     vaciar(ctx) {
@@ -344,7 +506,7 @@ absoluteArt.herramientasCanvas = {
     }
 
 }
-absoluteArt.utiles = {
+absoluteArt.utiles = { 
     datosCuadrilatero(trayecto) {
         let x = 0;
         let y = 0;
@@ -411,8 +573,12 @@ absoluteArt.utiles = {
         const infoObjeto = { x: elemento.getBoundingClientRect().x, y: elemento.getBoundingClientRect().y };
         return { x: cordX - infoObjeto.x, y: cordY - infoObjeto.y };
     },
+    pintarTrazo(trazo, ctx) {
+        absoluteArt[trazo.contexto.tipoHerramienta]?.[trazo.contexto.categoriaHerramienta]?.[trazo.contexto.herramienta](trazo, ctx)
+            ?? absoluteArt[trazo.contexto.tipoHerramienta]?.[trazo.contexto.herramienta]?.(trazo, ctx);
+    }
 }
-absoluteArt.dibujo = { // seccion de figuras pinceles y cualquier cosa que sea dibujo direto del canvas
+absoluteArt.dibujo = {
     figuras: {
         lineaRedondeada(conf, ctx) { // acomodar posicion de los circulos , recortar medio grosor la linea en cada lado y evitar solapamiento de alpha
             if (conf.contexto.recorrido[0].x !== conf.contexto.recorrido[conf.contexto.recorrido.length - 1].x ||
