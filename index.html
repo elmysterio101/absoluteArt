@@ -9,7 +9,6 @@
 </head>
 
 <body>
-
     <div class="configuracionCapa" id="configuracionCapaActual">
         <button id="cerrarConfCapa" type="button"
             onclick="document.getElementById('configuracionCapaActual').style.display = 'none'">x</button>
@@ -103,8 +102,7 @@
                 <div class="rango">
                     <p>grosor</p>
                     <input type="range" name="" min="1" value="100" max="400" step="1" id="grosor"
-                        oninput="grosor = document.getElementById('grosor').value,
-                                                                                                         document.getElementById('cartelGrosor').innerHTML = grosor">
+                        oninput="grosor = document.getElementById('grosor').value, document.getElementById('cartelGrosor').innerHTML = grosor">
                     <p id="cartelGrosor">100</p>
                 </div>
 

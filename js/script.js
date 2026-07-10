@@ -307,7 +307,6 @@ function moverCapaLista(capa, movimiento) {
 }
 
 function duplicarCapa() {
-    console.log(capaActual, 'duplicada')
     absoluteArt.lienzo.clonarCapa(capaActual.capaPadre, capaActual)
     agregarContenidoGrupo(absoluteArt.lienzo.capas)
     seleccionarCapa(capaActual.id, capaActual.tipoCapa)
@@ -383,8 +382,8 @@ canvas.addEventListener('mousedown', (e) => {
     recorrido.push(absoluteArt.utiles.adaptarCordCanvas(e.clientX, e.clientY, ctx))
     parametros = obtenerParametros();
 
-    absoluteArt[parametros.contexto.tipoHerramienta]?.[parametros.contexto.categoriaHerramienta]?.[parametros.contexto.herramienta](parametros, ctx)
-        ?? absoluteArt[parametros.contexto.tipoHerramienta]?.[parametros.contexto.herramienta]?.(parametros, ctx);
+    absoluteArt.utiles.pintarTrazo(parametros, ctx)
+
 
 });
 
@@ -395,8 +394,9 @@ canvas.addEventListener('mousemove', (e) => {
 
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
         absoluteArt.lienzo.capas.renderizarHasta(ctx, absoluteArt.lienzo.capaActiva.id)
-        absoluteArt[parametros.contexto.tipoHerramienta]?.[parametros.contexto.categoriaHerramienta]?.[parametros.contexto.herramienta](parametros, ctx)
-            ?? absoluteArt[parametros.contexto.tipoHerramienta]?.[parametros.contexto.herramienta]?.(parametros, ctx);
+
+        absoluteArt.utiles.pintarTrazo(parametros, ctx)
+
         absoluteArt.lienzo.capas.renderizarDesde(ctx, absoluteArt.lienzo.capaActiva.id)
     }
 });
@@ -407,8 +407,10 @@ canvas.addEventListener('mouseup', (e) => {
 
     recorrido.push(absoluteArt.utiles.adaptarCordCanvas(e.clientX, e.clientY, ctx))
     parametros = obtenerParametros();
-    absoluteArt.lienzo.capaActiva.historial.guardarHistorial(parametros);
+
+    absoluteArt.lienzo.capaActiva.guardarTrazo(parametros);
     absoluteArt.lienzo.capas.renderizar(ctx);
+
     sincronizarCapaCanvasReal(capaActual);
 });
 

@@ -98,9 +98,9 @@ class historial {
         }
         return cantidadTrazos;
     }
-    cargarTodosLosTrazos(ctx){
-        if(this.historialTrazos.length > 0){
-            for(const trazo of this.historialTrazos){
+    cargarTodosLosTrazos(ctx) {
+        if (this.historialTrazos.length > 0) {
+            for (const trazo of this.historialTrazos) {
                 absoluteArt.utiles.pintarTrazo(trazo, ctx)
             }
         }
@@ -328,15 +328,54 @@ class grupoCapas extends capaBase {
             }
         }
     }
+    clonar(capaPadre, idCopia) {
+        const clonCapa = new capa(
+            capaPadre,
+            idCopia,
+            this.canvas.width,
+            this.canvas.height,
+        )
 
-    clonar(grupo , id){
-        
+        clonCapa.ctx.drawImage(this.canvas, 0, 0)
+        clonCapa.x = this.x
+        clonCapa.y = this.y
+
+        clonCapa.nombre = this.nombre + ' (copia)'
+        return clonCapa;
     }
-
     clonarCapa(id, capa) {
         const clon = capa.clonar(this, id)
         this.contenido.push(clon)
         return clon
+    }
+    obtenerHijoFinal(capa) {
+        let CapaFinal = capa;
+        if (capa.tipoCapa === 'grupo') {
+            if (capa.contenido.length > 0) {
+                CapaFinal = this.obtenerHijoFinal(capa.contenido[capa.contenido.length - 1])
+            }
+        }
+        return CapaFinal;
+    }
+    aplanarContGrupo(grupo, aplanado, hijoFinal) { // grupo = contenido a aplanar , aplanado = array vacio (lugar donde se guarda el grupo) , hijoFinal = indica el fin del array , sino no puedo returnar 
+        console.log(aplanado)
+        let ultimoHijo;
+        for (const lugar of grupo.contenido) {
+            aplanado.push(lugar)
+            if (hijoFinal === lugar) {
+                return aplanado
+            }
+            if (lugar.tipoCapa === 'grupo') {
+                this.aplanarContGrupo(lugar, aplanado, hijoFinal)
+            }
+            ultimoHijo  = lugar;
+        }
+        if(ultimoHijo === hijoFinal){
+            return aplanado
+        }
+    }
+    contenidoAplanado() {
+        return this.aplanarContGrupo(this, [], this.obtenerHijoFinal(this));
     }
 }
 
@@ -351,25 +390,20 @@ class capa extends capaBase {
         this.nombre = 'capa ' + idCapa
     }
     tipoCapa = 'individual';
-
     guardarTrazo(trazo) {
         this.historial.guardarHistorial(trazo);
     }
-
     revertirTrazo() {
         this.historial.revertirTrazo();
     }
-
     recuperarTrazo() {
         this.historial.recuperarTrazo();
     }
-
     renderizar(ctx) {
         if (this.visible) {
             ctx.drawImage(this.canvas, this.x, this.y)
         }
     }
-
     clonar(capaPadre, idCopia) {
         const clonCapa = new capa(
             capaPadre,
@@ -389,6 +423,8 @@ class capa extends capaBase {
         clonCapa.historial.ctx = clonCapa.ctx
 
         clonCapa.ctx.drawImage(this.canvas, 0, 0)
+        clonCapa.x = this.x
+        clonCapa.y = this.y
 
         clonCapa.nombre = this.nombre + ' (copia)'
         return clonCapa;
@@ -397,19 +433,45 @@ class capa extends capaBase {
 
 absoluteArt.lienzo = {
     confCapas: {
-        frecuenciaCapturas: 10,
+        frecuenciaCapturas: 2,
         trayectoMuyLargo: 1000,
-        limiteCapturasHistorial: 5,
+        limiteCapturasHistorial: 50,
         altoCanvas: 720,
         anchoCanvas: 1280
     }, //no de capa
     conteoCapas: 0, // control de Id de capas
     conteoGrupoCapas: 0, // control de Id de capas
-    capas: [],
+    capas: {},
     capasIndividualesVivas: [],
     capasGrupoVivas: [],
     capaActiva: undefined,
     grupoCapasActiva: undefined,
+
+    clonarCapa(carpeta, capa, numCiclo) { //id carpeta es el padre, capa es la carpeta a clonar
+        if (carpeta.tipoCapa === 'grupo') {
+            if (capa.tipoCapa === 'individual') {
+                this.conteoCapas++
+
+                this.capaActiva = carpeta.clonarCapa(this.conteoCapas, capa);
+                this.capasIndividualesVivas.push(this.capaActiva);
+            } else {
+                this.conteoGrupoCapas++
+                const capaClonada = carpeta.clonarCapa(this.conteoGrupoCapas, capa);
+                if (numCiclo === 0) {
+                    this.grupoCapasActiva = capaClonada;
+                    this.capasGrupoVivas.push(this.grupoCapasActiva);
+                } else {
+                    this.capasGrupoVivas.splice(this.capasGrupoVivas - 2, 1, this.grupoCapasActiva);
+                }
+
+
+                if (this.grupoCapasActiva.contenido.length > 0) {
+
+                }
+            }
+        }
+        numCiclo++;
+    },
 
     agregarCapa(idCarpeta) {
         const capaPadre = this.capas.buscarGrupoCapas(idCarpeta);
@@ -421,15 +483,6 @@ absoluteArt.lienzo = {
             confCapa.idCapa = this.conteoCapas;
 
             this.capaActiva = capaPadre.agregarCapa(confCapa);
-            this.capasIndividualesVivas.push(this.capaActiva);
-        }
-    },
-
-    clonarCapa(carpeta, capa) { //id carpeta es el padre, capa es la carpeta a clonar
-        if (carpeta.tipoCapa === 'grupo') {
-            this.conteoCapas++
-
-            this.capaActiva = carpeta.clonarCapa(this.conteoCapas, capa);
             this.capasIndividualesVivas.push(this.capaActiva);
         }
     },
@@ -446,7 +499,6 @@ absoluteArt.lienzo = {
             this.capasGrupoVivas.push(this.grupoCapasActiva);
         }
     },
-
     eliminarCapa(id) { // eliminarCapa(id) 
         const capaPadre = this.capas.buscarCapa(id)?.capaPadre;
         if (capaPadre !== undefined) {
@@ -464,7 +516,6 @@ absoluteArt.lienzo = {
             }
         }
     },
-
     eliminarCapasHijo(capa) {
         if (capa.contenido.length > 0) {
             for (let i = capa.contenido.length - 1; i > - 1; i--) {
@@ -476,14 +527,12 @@ absoluteArt.lienzo = {
             }
         }
     },
-
     eliminarGrupoCapas(id) {
         const capaEliminar = this.capas.buscarGrupoCapas(id)
         const capaPadre = capaEliminar?.capaPadre;
         if (this.capasGrupoVivas.length > 0 && capaPadre !== undefined && id !== 0) {
             this.eliminarCapasHijo(capaEliminar);
             if (capaPadre.eliminarGrupoCapas(id)) {
-
                 let i = 0;
                 let capaVivaEliminada = false;
                 while (i < this.capasGrupoVivas.length && !capaVivaEliminada) {
@@ -506,7 +555,7 @@ absoluteArt.herramientasCanvas = {
     }
 
 }
-absoluteArt.utiles = { 
+absoluteArt.utiles = {
     datosCuadrilatero(trayecto) {
         let x = 0;
         let y = 0;
@@ -739,3 +788,4 @@ absoluteArt.configuracion = {
         absoluteArt.lienzo.capasIndividualesVivas.push(absoluteArt.lienzo.capaActiva)
     }
 }
+

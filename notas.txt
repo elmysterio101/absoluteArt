@@ -30,3 +30,5 @@ sistema de interfaz
 aclaracion( quiero utilizar 1 o varios canvas como mascara para los pinceles, no dibujar directamente en el canvas de 
             la capa sino utilizar 1 o varios canvas como mascaras ya sea para un patronees , degradados , opacidades mixtas, 
             imagenes , o cualquier tipo de cosa que se quiera)
+
+
