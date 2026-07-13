@@ -7,7 +7,7 @@ function hexToRgb(hex) {
     return { r, g, b }
 }
 
-const canvas = document.querySelector("canvas")
+const canvas = document.getElementById("canvasPrincipal")
 
 canvas.width = absoluteArt.lienzo.confCapas.anchoCanvas
 canvas.height = absoluteArt.lienzo.confCapas.altoCanvas
@@ -65,7 +65,7 @@ let recorrido = [];
 
 const listaCapas = document.getElementById('listaCapas');
 
-let capaActual = absoluteArt.lienzo.capas.buscarCapa(0)
+let capaActual = absoluteArt.lienzo.capas
 
 function obtenerParametros() {
     return {
@@ -111,6 +111,25 @@ function abrirConfiguracionCapa() {
     }
 
     actualizarSelectorCapaPadre();
+
+    if (capaActual.tipoCapa === 'grupo') {
+        document.getElementById('letreroCapaEditabilidad').parentElement.style.display = 'none'
+        if (capaActual.id === 0) {
+            document.getElementById('letreroCapaPadre').parentElement.style.display = 'none'
+            document.getElementById('capaCordenadaX').parentElement.style.display = 'none'
+            document.getElementById('capaCordenadaY').parentElement.style.display = 'none'
+        } else {
+            document.getElementById('letreroCapaPadre').parentElement.style.display = 'flex'
+            document.getElementById('capaCordenadaX').parentElement.style.display = 'flex';
+            document.getElementById('capaCordenadaY').parentElement.style.display = 'flex';
+        }
+    } else {
+        document.getElementById('letreroCapaEditabilidad').parentElement.style.display = 'flex'
+        document.getElementById('letreroCapaPadre').parentElement.style.display = 'flex'
+        document.getElementById('capaCordenadaX').parentElement.style.display = 'flex'
+        document.getElementById('capaCordenadaY').parentElement.style.display = 'flex';
+    }
+
 
     document.getElementById('nombreCapaConfigurada').innerHTML = capaActual.nombre
 
@@ -182,7 +201,6 @@ function agregarCapaDom(tipo) {
         idGrupoActivo = capa.id
 
         agregarCapaGrupo(ubic, capa);
-
         seleccionarCapa(idGrupoActivo, 'grupo')
 
     } else if (tipo === 'individual') {
@@ -216,6 +234,8 @@ function agregarCapaGrupo(ubicacion, capa) {
                 </div>
 
         `);
+
+    sincronizarCapaCanvasReal(capa)
 }
 
 function agregarCapaIndividual(ubicacion, capa) {
@@ -235,6 +255,8 @@ function agregarCapaIndividual(ubicacion, capa) {
                 </div>
 
         `);
+
+    sincronizarCapaCanvasReal(capa)
 }
 
 function agregarContenidoGrupo(grupo) {
@@ -307,7 +329,9 @@ function moverCapaLista(capa, movimiento) {
 }
 
 function duplicarCapa() {
-    absoluteArt.lienzo.clonarCapa(capaActual.capaPadre, capaActual)
+    if (capaActual.capaPadre) {
+        absoluteArt.lienzo.clonarCapa(capaActual.capaPadre, capaActual)
+    }
     agregarContenidoGrupo(absoluteArt.lienzo.capas)
     seleccionarCapa(capaActual.id, capaActual.tipoCapa)
 }

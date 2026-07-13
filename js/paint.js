@@ -177,7 +177,6 @@ class capaBase {
     x = 0;
     y = 0;
     visible = true;
-    editable = true;
     opacidad = 1;
 
     renderizar() {
@@ -322,14 +321,13 @@ class grupoCapas extends capaBase {
         if (capa) {
             for (let i = 0; i < this.contenido.length; i++) {
                 if (this.contenido[i] === capa) {
-                    console.log(i)
                     return i;
                 }
             }
         }
     }
     clonar(capaPadre, idCopia) {
-        const clonCapa = new capa(
+        const clonCapa = new grupoCapas(
             capaPadre,
             idCopia,
             this.canvas.width,
@@ -339,6 +337,9 @@ class grupoCapas extends capaBase {
         clonCapa.ctx.drawImage(this.canvas, 0, 0)
         clonCapa.x = this.x
         clonCapa.y = this.y
+        clonCapa.opacidad = this.opacidad
+        clonCapa.visible = this.visible
+
 
         clonCapa.nombre = this.nombre + ' (copia)'
         return clonCapa;
@@ -348,35 +349,7 @@ class grupoCapas extends capaBase {
         this.contenido.push(clon)
         return clon
     }
-    obtenerHijoFinal(capa) {
-        let CapaFinal = capa;
-        if (capa.tipoCapa === 'grupo') {
-            if (capa.contenido.length > 0) {
-                CapaFinal = this.obtenerHijoFinal(capa.contenido[capa.contenido.length - 1])
-            }
-        }
-        return CapaFinal;
-    }
-    aplanarContGrupo(grupo, aplanado, hijoFinal) { // grupo = contenido a aplanar , aplanado = array vacio (lugar donde se guarda el grupo) , hijoFinal = indica el fin del array , sino no puedo returnar 
-        console.log(aplanado)
-        let ultimoHijo;
-        for (const lugar of grupo.contenido) {
-            aplanado.push(lugar)
-            if (hijoFinal === lugar) {
-                return aplanado
-            }
-            if (lugar.tipoCapa === 'grupo') {
-                this.aplanarContGrupo(lugar, aplanado, hijoFinal)
-            }
-            ultimoHijo  = lugar;
-        }
-        if(ultimoHijo === hijoFinal){
-            return aplanado
-        }
-    }
-    contenidoAplanado() {
-        return this.aplanarContGrupo(this, [], this.obtenerHijoFinal(this));
-    }
+
 }
 
 class capa extends capaBase {
@@ -390,6 +363,7 @@ class capa extends capaBase {
         this.nombre = 'capa ' + idCapa
     }
     tipoCapa = 'individual';
+    editable = true;
     guardarTrazo(trazo) {
         this.historial.guardarHistorial(trazo);
     }
@@ -425,6 +399,9 @@ class capa extends capaBase {
         clonCapa.ctx.drawImage(this.canvas, 0, 0)
         clonCapa.x = this.x
         clonCapa.y = this.y
+        clonCapa.opacidad = this.opacidad
+        clonCapa.visible = this.visible
+        clonCapa.editable = this.editable
 
         clonCapa.nombre = this.nombre + ' (copia)'
         return clonCapa;
@@ -433,9 +410,9 @@ class capa extends capaBase {
 
 absoluteArt.lienzo = {
     confCapas: {
-        frecuenciaCapturas: 2,
+        frecuenciaCapturas: 10,
         trayectoMuyLargo: 1000,
-        limiteCapturasHistorial: 50,
+        limiteCapturasHistorial: 5,
         altoCanvas: 720,
         anchoCanvas: 1280
     }, //no de capa
@@ -447,7 +424,7 @@ absoluteArt.lienzo = {
     capaActiva: undefined,
     grupoCapasActiva: undefined,
 
-    clonarCapa(carpeta, capa, numCiclo) { //id carpeta es el padre, capa es la carpeta a clonar
+    clonarCapa(carpeta, capa) { //id carpeta es el padre, capa es la carpeta a clonar
         if (carpeta.tipoCapa === 'grupo') {
             if (capa.tipoCapa === 'individual') {
                 this.conteoCapas++
@@ -455,24 +432,26 @@ absoluteArt.lienzo = {
                 this.capaActiva = carpeta.clonarCapa(this.conteoCapas, capa);
                 this.capasIndividualesVivas.push(this.capaActiva);
             } else {
-                this.conteoGrupoCapas++
-                const capaClonada = carpeta.clonarCapa(this.conteoGrupoCapas, capa);
-                if (numCiclo === 0) {
-                    this.grupoCapasActiva = capaClonada;
+                if (capa.id !== 0) {
+                    this.conteoGrupoCapas++
+                    this.grupoCapasActiva = carpeta.clonarCapa(this.conteoGrupoCapas, capa);
                     this.capasGrupoVivas.push(this.grupoCapasActiva);
-                } else {
-                    this.capasGrupoVivas.splice(this.capasGrupoVivas - 2, 1, this.grupoCapasActiva);
-                }
-
-
-                if (this.grupoCapasActiva.contenido.length > 0) {
-
+                    this.clonarContenido(capa, this.grupoCapasActiva)
                 }
             }
         }
-        numCiclo++;
     },
-
+    clonarContenido(grupo, clon) {
+        for (const capa of grupo.contenido) {
+            this.clonarCapa(clon, capa)
+            if (capa.tipoCapa === 'grupo') {
+                if (capa.contenido.length > 0) {
+                    const padre = clon.contenido[clon.contenido.length - 1]
+                    clonarContenido(capa, padre)
+                }
+            }
+        }
+    },
     agregarCapa(idCarpeta) {
         const capaPadre = this.capas.buscarGrupoCapas(idCarpeta);
         if (capaPadre) {

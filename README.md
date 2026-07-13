@@ -1,15 +1,8 @@
 # absoluteArt
 La idea nacio como un clon de paint pero a medida que voy conociendo mas secciones de un editor grafico profesional mas me le quiero asemejar con este proyecto.
-El proyecto lo dare como finalizado luego de tener todas las herramientas del paint nativo pero mejores,  cuando se asemeja mas a photoshop que paint estare contento.
+El proyecto lo dare como finalizado luego de haber superado totalmente el paint de w11 , ademas de tener las herramientas basicas de un editor grafico fuerte como las sensibles a la velocidad y presion , sin olvidar que para que este proyecto sea decente debe de vivir 100% dentro del canvas, por lo tanto tendre que tener una especie de html propio ( van a ser simplemente un nuevo tipo de capas , segun tipo de elemento)
 
-
-// anotacion
-en proceso de creacion de sistema de capas, enduda de tener o no agrupacion de capas , tengo que decidirlo y seguir , estoy en fecha de parciales asi que se pausa momentaneamente o hasta que me aburrra devuelta 
-
-// anotacion
-correccion de bug al pintar trazos , al guardar un trazo en historial se pintaba directamente en su canvas correspondiente, pero al guardar captura se volvio a a hacer y si era n trazo de alpha != 0 o 1 se veia la diferencia  , para solucionarlo lo puse directamente en el if que revisaba si se guardaba captura, justamente agregue un else y puse ese pintado de trazo ahi.
-
-//anotacion
-corregir metodo de renderizado de la clase grupoCapas, ademas de crear una funcion que renderize hasta cierta capa seleccionada y otra que haga lo opuesto , no renderizar hasta que la encuentre.
+Si ves el estado actual de absoluteArt es un provisorio , lo unico que se va a mantener al final del proyecto es el absoluteArt.js , todo el html va  desaparecer menos el canvas
+el script.js es un controlador de absoluteArt momentaneo , pronto se reducira a los 3 eventListener y el ctx.
 
 https://absoluteart.vercel.app/

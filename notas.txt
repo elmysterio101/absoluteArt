@@ -1,13 +1,15 @@
 Funcionalidades que quiero : 
 
 historial por capas y global
+historial maleable 
+
 
 capas 
 duplicacion de capas/grupos
 fusion de capas
 grupos capas
 mascaras de capas
-¿mesa de trabajo? si entiendo que es capas le hago
+mesas de trabajo
 movilidad y redimencion de capas
 
 rotacion y velteo de capas
@@ -30,5 +32,4 @@ sistema de interfaz
 aclaracion( quiero utilizar 1 o varios canvas como mascara para los pinceles, no dibujar directamente en el canvas de 
             la capa sino utilizar 1 o varios canvas como mascaras ya sea para un patronees , degradados , opacidades mixtas, 
             imagenes , o cualquier tipo de cosa que se quiera)
-
 

@@ -15,7 +15,7 @@
 
         <p id="nombreCapaConfigurada">nombreCapa</p>
         <div class="variablesCapa">
-            <div class="variableCapa">
+            <div class="variableCapa ">
                 <p id="letreroCapaOpacidad">opacidad : 1</p>
                 <input type="range" name="" id="capaOpacidad" step="0.01" min="0" max="1" value="1"
                     oninput="cambiarOpacidadCapa()">
@@ -51,11 +51,9 @@
 
         <div class="acciones">
             <button type="button" onclick="duplicarCapa() ">duplicar capa</button>
-            <button type="button" onclick="moverCapaLista(capaActual, 1) ">mover arriba capa</button>
-            <button type="button" onclick="moverCapaLista(capaActual, -1) ">mover abajo capa</button>
-            <button type="button">Editar capa individual</button>
-            <button type="button">Mover capa(canvas)</button>
-            <button type="button">Redimenzionar capa</button>
+            <button type="button" onclick="moverCapaLista(capaActual, 1)">mover arriba capa</button>
+            <button type="button" onclick="moverCapaLista(capaActual, -1)">mover abajo capa</button>
+            <button type="button" onclick="">editar historial</button>
             <button type="button" onclick="eliminarCapaActual()">Eliminar capa</button>
         </div>
     </div>
@@ -123,11 +121,39 @@
                 </div>
 
             </div>
-            <div class="visualizacionHistorial"></div>
+
+            <div id="historialTrazos">
+                <button type="button" class="configuracionTrazos">
+                    configuracion listado
+                </button>
+
+                <div id="listaTrazos">
+                    <button type="button" class="trazo">
+                        <p>indice trazo</p>
+                        <canvas id="trazo1"></canvas>
+                    </button>
+                    <button type="button" class="trazo">
+                        <p>indice trazo</p>
+                        <canvas></canvas>
+                    </button>
+                    <button type="button" class="trazo">
+                        <p>indice trazo</p>
+                        <canvas></canvas>
+                    </button>
+                    <button type="button" class="trazo">
+                        <p>indice trazo</p>
+                        <canvas></canvas>
+                    </button>
+                    <button type="button" class="trazo">
+                        <p>indice trazo</p>
+                        <canvas></canvas>
+                    </button>
+                </div>
+                
+            </div>
         </div>
 
         <canvas height="720" width="1280" id="canvasPrincipal">
-
         </canvas>
 
         <div class="seccionDerecha">
@@ -176,8 +202,8 @@
 
         </div>
     </section>
-    <div class="barraEstatus">
 
+    <div class="barraEstatus">
     </div>
 
     <script src="js/paint.js"></script>

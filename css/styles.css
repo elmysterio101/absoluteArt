@@ -1,13 +1,19 @@
 :root {
     --padding: 1.5vw;
+    --fondoCanvas: white;
 }
 
 * {
     padding: 0;
     margin: 0;
     box-sizing: border-box;
+    font-size: 2vh;
 }
 
+input[type="checkbox"] {
+    width: 1.5vh;
+    height: 1.5vh;
+}
 
 body {
     display: flex;
@@ -234,11 +240,11 @@ select {
     transform: rotateZ(90deg);
 }
 
-.representacionCapa input[type="checkbox"]:not(:checked) ~ .contenido{
+.representacionCapa input[type="checkbox"]:not(:checked)~.contenido {
     display: none;
 }
 
-.representacionCapa input[type="checkbox"]:checked ~ .contenido{
+.representacionCapa input[type="checkbox"]:checked~.contenido {
     display: flex;
 }
 
@@ -248,7 +254,7 @@ select {
     width: 20vh;
 }
 
-.infoPlegado p { 
+.infoPlegado p {
     width: 100%;
     justify-content: center;
     align-items: center;
@@ -266,15 +272,15 @@ select {
     flex-direction: column;
 }
 
-.capaIndividual{
-    background-color:rgb(218, 60, 32) ;
+.capaIndividual {
+    background-color: rgb(218, 60, 32);
 }
 
-.activo{
+.activo {
     background-color: lightgreen;
 }
 
-#configuracionCapaActual{
+#configuracionCapaActual {
     background-color: powderblue;
     width: 30vh;
     height: 70vh;
@@ -289,18 +295,18 @@ select {
     gap: 1vh;
 }
 
-#configuracionCapaActual > p{
+#configuracionCapaActual>p {
     font-size: 2vh;
 
     font-family: Arial, Helvetica, sans-serif;
     text-align: start;
     padding-left: 1vh;
-    font-weight:bolder;
+    font-weight: bolder;
     background-color: lightgreen;
     letter-spacing: 0.2vh;
 }
 
-#configuracionCapaActual .variablesCapa{
+#configuracionCapaActual .variablesCapa {
     background-color: blueviolet;
     height: 50%;
     width: 100%;
@@ -309,7 +315,7 @@ select {
     gap: 4%;
 }
 
-.variablesCapa .variableCapa{
+.variablesCapa .variableCapa {
     display: flex;
     flex-direction: column;
     font-weight: bold;
@@ -317,10 +323,10 @@ select {
     width: 100%;
     height: 17%;
     background-color: rgb(219, 91, 91);
-    padding:0 1vh;
+    padding: 0 1vh;
 }
 
-#configuracionCapaActual .acciones{
+#configuracionCapaActual .acciones {
     background-color: darkcyan;
     width: 100%;
     height: 45%;
@@ -329,7 +335,7 @@ select {
     justify-content: space-evenly;
 }
 
-#cerrarConfCapa{
+#cerrarConfCapa {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -344,17 +350,70 @@ select {
     font-size: 3vh;
 }
 
-.cambiarGrupo select{
+.cambiarGrupo select {
     width: 65%;
     height: 100%;
 }
 
 
-.variablesCapa .variableCapa button{
+.variablesCapa .variableCapa button {
     width: 30%;
 }
 
-.cambiarGrupo{
+.cambiarGrupo {
     display: flex;
     justify-content: space-between;
+}
+
+
+
+#historialTrazos {
+    background-color: powderblue;
+    height: 75vh;
+    width: 32vh;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 28vh;
+    display: flex;
+    flex-direction: column;
+    padding: 1.3vh;
+    gap: 1.3vh;
+}
+
+.configuracionTrazos {
+    width: 100%;
+    height: 4vh;
+}
+
+#listaTrazos {
+    width: 100%;
+    height: 100%;
+    background-color: brown;
+    display: flex;
+    flex-direction: column;
+    gap: 1.3vh;
+    overflow: scroll;
+}
+
+.trazo {
+    background-color: violet;
+    width: 100%;
+    height: 17vh;
+}
+
+.trazo p {
+    text-align: center;
+    width: 100%;
+    height: 2.5vh;
+    background-color: rgb(162, 255, 162);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.trazo canvas {
+    width: 100%;
+    height: 84.3%;
+    background-color: var(--fondoCanvas);
 }
