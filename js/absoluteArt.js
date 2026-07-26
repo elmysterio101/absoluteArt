@@ -1,4 +1,3 @@
-
 class lienzoBase {
     constructor(largo, alto) {
         this.largo = largo;
@@ -35,7 +34,6 @@ class lienzoBase {
     }
 
 }
-
 class lienzoHtml extends lienzoBase {
     constructor(largo, alto, canvas) {
         super(largo, alto)
@@ -148,7 +146,6 @@ class lienzoHtml extends lienzoBase {
         };
     }
 }
-
 class capaBase {
     constructor(capaPadre, idCapa, anchoCanvas, altoCanvas) {
         this.lienzo = lienzo.obtener(anchoCanvas, altoCanvas)
@@ -162,7 +159,6 @@ class capaBase {
     renderizar() {
     }
 }
-
 class grupoCapas extends capaBase { // ctx cambiado
     constructor(capaPadre, idCapa, anchoCanvas, altoCanvas) {
         super(capaPadre, idCapa, anchoCanvas, altoCanvas)
@@ -330,7 +326,6 @@ class grupoCapas extends capaBase { // ctx cambiado
     }
 
 }
-
 class capa extends capaBase { // ctx cambiado
     constructor(capaPadre, idCapa, anchoCanvas, altoCanvas, frecuenciaCapturas, trayectoMuyLargo, limiteCapturasHistorial) {
         super(capaPadre, idCapa, anchoCanvas, altoCanvas)
@@ -387,6 +382,7 @@ class capa extends capaBase { // ctx cambiado
         return clonCapa;
     }
 }
+
 class historial {
     constructor(frecuenciaCapturas, trayectoMuyLargo, limiteCapturasHistorial, lienzo) {
         this.frecuenciaTrazos = frecuenciaCapturas;// de base son 10
@@ -544,6 +540,12 @@ class historial {
             historialTrazos: this.clonarHistorialTrazos(this.historialTrazos),
             historialCapturas: this.clonarCapturas()
         }
+    }
+}
+
+class trazo{
+    constructor({r,g,b,}){
+
     }
 }
 
