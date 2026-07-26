@@ -1,5 +1,8 @@
 Funcionalidades que quiero : 
 
+nueva Idea : Adaptador de html / css a absoluteArt , recibir documento html y css y adaptar sus elementos a canvas interfaz , para que funcionen en cualquier lado
+             no adaptar absolutamente todo , sino las funcionalidades , que funcione igual pero por dentro mas simple , sino deberia aprender todo css y no quiero
+
 historial por capas y global
 historial maleable 
 
@@ -33,3 +36,303 @@ aclaracion( quiero utilizar 1 o varios canvas como mascara para los pinceles, no
             la capa sino utilizar 1 o varios canvas como mascaras ya sea para un patronees , degradados , opacidades mixtas, 
             imagenes , o cualquier tipo de cosa que se quiera)
 
+
+tipos de herramientas , se las pedi a gpt pero sin simplemente ideas 
+
+Herramientas
+│
+├── Dibujo
+│   │
+│   ├── Lápices
+│   │   ├── Lápiz duro
+│   │   ├── Lápiz HB
+│   │   ├── Lápiz blando
+│   │   ├── Portaminas
+│   │   ├── Lápiz de color
+│   │   ├── Lápiz pastel
+│   │   ├── Lápiz carbón
+│   │   ├── Lápiz acuarelable
+│   │   └── Lápiz de cera
+│   │
+│   ├── Pinceles
+│   │   │
+│   │   ├── Redondos
+│   │   │   ├── Duro
+│   │   │   ├── Suave
+│   │   │   ├── Texturizado
+│   │   │   └── Difuso
+│   │   │
+│   │   ├── Planos
+│   │   │   ├── Duro
+│   │   │   ├── Suave
+│   │   │   ├── Biselado
+│   │   │   └── Angular
+│   │   │
+│   │   ├── Artísticos
+│   │   │   ├── Acuarela
+│   │   │   ├── Óleo
+│   │   │   ├── Acrílico
+│   │   │   ├── Gouache
+│   │   │   ├── Tinta
+│   │   │   ├── Pastel
+│   │   │   ├── Carbón
+│   │   │   ├── Pincel seco
+│   │   │   ├── Pincel húmedo
+│   │   │   ├── Esponja
+│   │   │   ├── Espátula
+│   │   │   └── Abanico
+│   │   │
+│   │   ├── Aerógrafos
+│   │   │   ├── Circular
+│   │   │   ├── Suave
+│   │   │   ├── Texturizado
+│   │   │   └── Spray
+│   │   │
+│   │   └── Especiales
+│   │       ├── Césped
+│   │       ├── Hojas
+│   │       ├── Árboles
+│   │       ├── Nubes
+│   │       ├── Humo
+│   │       ├── Fuego
+│   │       ├── Agua
+│   │       ├── Pelo
+│   │       ├── Partículas
+│   │       └── Glitter
+│   │
+│   ├── Marcadores
+│   │   │
+│   │   ├── Punta redonda
+│   │   │   ├── Fina
+│   │   │   ├── Media
+│   │   │   └── Gruesa
+│   │   │
+│   │   ├── Punta cuadrada
+│   │   │   ├── Fina
+│   │   │   ├── Media
+│   │   │   └── Gruesa
+│   │   │
+│   │   ├── Punta biselada
+│   │   │   ├── Caligrafía
+│   │   │   └── Resaltador
+│   │   │
+│   │   ├── Punta pincel
+│   │   │   ├── Flexible
+│   │   │   └── Rígida
+│   │   │
+│   │   └── Especiales
+│   │       ├── Permanente
+│   │       ├── Lavable
+│   │       ├── Metálico
+│   │       ├── Fluorescente
+│   │       └── Tiza líquida
+│   │
+│   ├── Plumas
+│   │   ├── Bolígrafo
+│   │   ├── Gel
+│   │   ├── Roller
+│   │   ├── Fuente
+│   │   ├── Plumín
+│   │   ├── Caligráfica
+│   │   └── Técnica
+│   │
+│   ├── Formas
+│   │   │
+│   │   ├── Líneas
+│   │   │   ├── Recta
+│   │   │   ├── Polilínea
+│   │   │   ├── Bézier
+│   │   │   ├── Arco
+│   │   │   ├── Espiral
+│   │   │   └── Flechas
+│   │   │       ├── Simple
+│   │   │       ├── Doble
+│   │   │       ├── Curva
+│   │   │       └── Técnica
+│   │   │
+│   │   ├── Rectángulos
+│   │   │   ├── Normal
+│   │   │   ├── Redondeado
+│   │   │   ├── Biselado
+│   │   │   └── Perspectiva
+│   │   │
+│   │   ├── Círculos y Elipses
+│   │   │   ├── Círculo
+│   │   │   ├── Elipse
+│   │   │   ├── Arco
+│   │   │   └── Dona
+│   │   │
+│   │   ├── Polígonos
+│   │   │   ├── Triángulo
+│   │   │   ├── Pentágono
+│   │   │   ├── Hexágono
+│   │   │   ├── Octógono
+│   │   │   └── Personalizado
+│   │   │
+│   │   └── Decorativas
+│   │       ├── Corazón
+│   │       ├── Nube
+│   │       ├── Globo
+│   │       ├── Estrella
+│   │       ├── Engranaje
+│   │       ├── Cruz
+│   │       ├── Luna
+│   │       └── Rayo
+│   │
+│   ├── Sellos
+│   │   │
+│   │   ├── Geométricos
+│   │   │   ├── Círculo
+│   │   │   ├── Cuadrado
+│   │   │   ├── Estrella
+│   │   │   └── Corazón
+│   │   │
+│   │   ├── Naturaleza
+│   │   │   ├── Hoja
+│   │   │   ├── Flor
+│   │   │   ├── Árbol
+│   │   │   ├── Césped
+│   │   │   ├── Piedra
+│   │   │   ├── Nube
+│   │   │   └── Gota
+│   │   │
+│   │   ├── Decoración
+│   │   │   ├── Emoji
+│   │   │   ├── Confeti
+│   │   │   ├── Estrellas
+│   │   │   ├── Copos
+│   │   │   ├── Chispas
+│   │   │   └── Glitter
+│   │   │
+│   │   └── Personalizados
+│   │       ├── Imagen
+│   │       ├── SVG
+│   │       ├── Canvas
+│   │       ├── Grupo
+│   │       └── Símbolo
+│   │
+│   ├── Patrones
+│   │   ├── Rayado
+│   │   ├── Cuadrícula
+│   │   ├── Puntos
+│   │   ├── Zigzag
+│   │   ├── Ondas
+│   │   ├── Trama
+│   │   ├── Ruido
+│   │   └── Personalizado
+│   │
+│   ├── Pixel Art
+│   │   ├── Lápiz
+│   │   ├── Línea
+│   │   ├── Rectángulo
+│   │   ├── Elipse
+│   │   ├── Cubeta
+│   │   ├── Dithering
+│   │   └── Simetría
+│   │
+│   ├── Relleno
+│   │   ├── Balde
+│   │   ├── Balde inteligente
+│   │   ├── Patrón
+│   │   ├── Degradado lineal
+│   │   ├── Degradado radial
+│   │   ├── Degradado angular
+│   │   ├── Degradado reflejado
+│   │   └── Degradado de ruido
+│   │
+│   └── Mezcla
+│       ├── Difuminar
+│       ├── Mezclar
+│       ├── Dedo
+│       ├── Arrastrar pintura
+│       ├── Licuar pintura
+│       ├── Desenfocar pintura
+│       └── Suavizar
+│
+├── Selección
+│   ├── Rectangular
+│   ├── Elíptica
+│   ├── Lazo
+│   ├── Lazo poligonal
+│   ├── Lazo magnético
+│   ├── Varita mágica
+│   ├── Selección rápida
+│   ├── Por color
+│   ├── Por objeto
+│   └── Por canal
+│
+├── Transformación
+│   ├── Mover
+│   ├── Escalar
+│   ├── Rotar
+│   ├── Sesgar
+│   ├── Perspectiva
+│   ├── Deformar
+│   ├── Licuar
+│   ├── Reflejar
+│   └── Duplicar
+│
+├── Edición
+│   ├── Borradores
+│   │   ├── Circular
+│   │   ├── Cuadrado
+│   │   ├── Pincel
+│   │   ├── Mágico
+│   │   ├── Inteligente
+│   │   └── Por color
+│   │
+│   ├── Clonado
+│   │   ├── Clonar
+│   │   ├── Reparar
+│   │   ├── Corrector
+│   │   └── Parche
+│   │
+│   ├── Recorte
+│   │   ├── Rectangular
+│   │   ├── Circular
+│   │   ├── Libre
+│   │   ├── Perspectiva
+│   │   └── Inteligente
+│   │
+│   └── Cuentagotas
+│       ├── Color
+│       ├── Patrón
+│       ├── Degradado
+│       └── Estilo
+│
+├── Texto
+│   ├── Horizontal
+│   ├── Vertical
+│   ├── Sobre curva
+│   ├── Artístico
+│   └── Deformado
+│
+├── Medición
+│   ├── Regla
+│   ├── Transportador
+│   ├── Distancia
+│   └── Ángulo
+│
+├── Navegación
+│   ├── Mano
+│   ├── Zoom
+│   ├── Rotar lienzo
+│   └── Vista rápida
+│
+├── Asistencia
+│   ├── Guías
+│   ├── Cuadrícula
+│   ├── Ajuste a objetos
+│   ├── Ajuste a píxel
+│   ├── Simetría
+│   └── Repetición
+│
+└── Especiales 
+    ├── Macro
+    ├── Procedural // sepa dios que es esto
+    ├── Fractales
+    ├── Autómatas celulares
+    ├── Física de pintura
+    ├── Simulación de acuarela
+    ├── Simulación de óleo
+    └── IA (futuro) // esta no la veo viable

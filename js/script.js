@@ -6,31 +6,31 @@ function hexToRgb(hex) {
 
     return { r, g, b }
 }
+const canvasDom = document.getElementById("canvasPrincipal");
+const canvas = new lienzoHtml(canvasDom.width, canvasDom.height, canvasDom)
 
-const canvas = document.getElementById("canvasPrincipal")
 
-canvas.width = absoluteArt.lienzo.confCapas.anchoCanvas
-canvas.height = absoluteArt.lienzo.confCapas.altoCanvas
+canvasDom.width = lienzoPrincipal.confCapas.anchoCanvas
+canvasDom.height = lienzoPrincipal.confCapas.altoCanvas
 
-const ctx = canvas.getContext('2d')
-const canvasInfo = canvas.getBoundingClientRect();
+const canvasInfo = canvasDom.getBoundingClientRect();
 
-absoluteArt.configuracion.configurarEsteticaCanvas(canvas)
-absoluteArt.configuracion.agregarCapaBase()
+configuracion.configurarEsteticaCanvas(canvasDom)
+configuracion.agregarCapaBase()
 
 function revertirTrazo() {
-    if (absoluteArt.lienzo.capaActiva.historial.historialTrazos.length > 0) {
-        absoluteArt.herramientasCanvas.vaciar(ctx)
-        absoluteArt.lienzo.capaActiva.historial.revertirTrazo()
-        absoluteArt.lienzo.capas.renderizar(ctx)
+    if (lienzoPrincipal.capaActiva.historial.historialTrazos.length > 0) {
+        canvas.limpiar()
+        lienzoPrincipal.capaActiva.historial.revertirTrazo()
+        lienzoPrincipal.capas.renderizar(canvas)
     }
 }
 
 function recuperarTrazo() {
-    if (absoluteArt.lienzo.capaActiva.historial.trazosRevertidos.length > 0) {
-        absoluteArt.herramientasCanvas.vaciar(ctx)
-        absoluteArt.lienzo.capaActiva.historial.recuperarTrazo()
-        absoluteArt.lienzo.capas.renderizar(ctx)
+    if (lienzoPrincipal.capaActiva.historial.trazosRevertidos.length > 0) {
+        canvas.limpiar()
+        lienzoPrincipal.capaActiva.historial.recuperarTrazo()
+        lienzoPrincipal.capas.renderizar(canvas)
     }
 }
 
@@ -45,17 +45,19 @@ function listarHerramientas() {
         document.getElementById("figuras").insertAdjacentHTML('beforeend', `<option value="${figura}" class="figura">${figura}</option>`);
     }
 
+    /*
     const herramientas = Object.keys(absoluteArt.dibujo.herramientas)
     for (const herramienta of herramientas) {
         document.getElementById("herramientas").insertAdjacentHTML('beforeend', `<option value="${herramienta}" class="herramienta">${herramienta}</option>`);
     }
+*/
 
 }
 
 listarHerramientas();
 let tipoHerramienta = 'dibujo';
-let categoriaHerramienta = 'pinceles';
-let herramienta = 'clasico';
+let categoriaHerramienta = 'figuras';
+let herramienta = 'lineaBrusca';
 let colorPrincipal = { r: 0, g: 0, b: 0 };
 let colorSecundario = { r: 0, g: 0, b: 0 };
 let grosor = 100;
@@ -65,7 +67,7 @@ let recorrido = [];
 
 const listaCapas = document.getElementById('listaCapas');
 
-let capaActual = absoluteArt.lienzo.capas
+let capaActual = lienzoPrincipal.capas
 
 function obtenerParametros() {
     return {
@@ -105,9 +107,9 @@ function abrirConfiguracionCapa() {
     confCapa.style.display = "flex";
     let capa;
     if (tipoCapaActiva === 'grupo') {
-        capaActual = absoluteArt.lienzo.capas.buscarGrupoCapas(idGrupoActivo);
+        capaActual = lienzoPrincipal.capas.buscarGrupoCapas(idGrupoActivo);
     } else {
-        capaActual = absoluteArt.lienzo.capas.buscarCapa(idCapaActiva);
+        capaActual = lienzoPrincipal.capas.buscarCapa(idCapaActiva);
     }
 
     actualizarSelectorCapaPadre();
@@ -151,8 +153,8 @@ let tipoCapaActiva = 'grupo';
 function seleccionarCapa(id, tipo) {
     if (tipo === 'individual') {
         tipoCapaActiva = 'individual';
-        capaActual = absoluteArt.lienzo.capas.buscarCapa(id);
-        absoluteArt.lienzo.capaActiva = capaActual;
+        capaActual = lienzoPrincipal.capas.buscarCapa(id);
+        lienzoPrincipal.capaActiva = capaActual;
 
         idCapaActiva = id;
         const eliminar = document.querySelector('.activo')
@@ -163,10 +165,9 @@ function seleccionarCapa(id, tipo) {
         abrirConfiguracionCapa()
         abrirCapasPadre(capaActual)
     } else if (tipo === 'grupo') {
-
         tipoCapaActiva = 'grupo';
-        capaActual = absoluteArt.lienzo.capas.buscarGrupoCapas(id);
-        absoluteArt.lienzo.grupoCapasActiva = capaActual;
+        capaActual = lienzoPrincipal.capas.buscarGrupoCapas(id);
+        lienzoPrincipal.grupoCapasActiva = capaActual;
         idGrupoActivo = id;
 
         const eliminar = document.querySelector('.activo')
@@ -196,8 +197,8 @@ function agregarCapaDom(tipo) {
     const ubic = document.getElementById('contenido' + idGrupoActivo);
 
     if (tipo === 'grupo') {
-        absoluteArt.lienzo.agregarGrupoCapas(idGrupoActivo);
-        const capa = absoluteArt.lienzo.grupoCapasActiva
+        lienzoPrincipal.agregarGrupoCapas(idGrupoActivo);
+        const capa = lienzoPrincipal.grupoCapasActiva
         idGrupoActivo = capa.id
 
         agregarCapaGrupo(ubic, capa);
@@ -205,8 +206,8 @@ function agregarCapaDom(tipo) {
 
     } else if (tipo === 'individual') {
 
-        absoluteArt.lienzo.agregarCapa(idGrupoActivo);
-        const capa = absoluteArt.lienzo.capaActiva
+        lienzoPrincipal.agregarCapa(idGrupoActivo);
+        const capa = lienzoPrincipal.capaActiva
         capaActiva = capa.id
 
         agregarCapaIndividual(ubic, capa)
@@ -226,7 +227,7 @@ function agregarCapaGrupo(ubicacion, capa) {
                         </label>
                         <button type="button" class="infoPlegado" onclick="seleccionarCapa(${capa.id} , 'grupo')">
                             <p class="nombreCapa"> ${capa.nombre}</p>
-                            <canvas id="canvasgrupocapa${capa.id}" height="${capa.canvas.height}" width="${capa.canvas.width}" "></canvas>
+                            <canvas id="canvasgrupocapa${capa.id}" height="${Number(capa.lienzo.alto)}" width="${Number(capa.lienzo.largo)}" "></canvas>
                         </button>
                     </div>
                     <div class="contenido" id="contenido${capa.id}">
@@ -249,7 +250,7 @@ function agregarCapaIndividual(ubicacion, capa) {
                         </label>
                         <button type="button" class="infoPlegado" onclick="seleccionarCapa(${capa.id} , 'individual')">
                             <p class="nombreCapa"> ${capa.nombre}</p>
-                            <canvas id="canvasindividualcapa${capa.id}" height="${Number(capa.canvas.height)}" width="${Number(capa.canvas.width)}" ></canvas>
+                            <canvas id="canvasindividualcapa${capa.id}" height="${Number(capa.lienzo.alto)}" width="${Number(capa.lienzo.largo)}" ></canvas>
                         </button>
                     </div>
                 </div>
@@ -288,28 +289,30 @@ function eliminarCapaActual() {
     }
     if (!capaDios) {
         if (capaActual.tipoCapa === 'grupo') {
-            absoluteArt.lienzo.eliminarGrupoCapas(capaActual.id);
+            lienzoPrincipal.eliminarGrupoCapas(capaActual.id);
             document.getElementById('representacionGrupo' + capaActual.id).remove()
         } else {
-            absoluteArt.lienzo.eliminarCapa(capaActual.id);
+            lienzoPrincipal.eliminarCapa(capaActual.id);
             document.getElementById('representacionCapa' + capaActual.id).remove()
         }
-        capaActual = absoluteArt.lienzo.capas
+        capaActual = lienzoPrincipal.capas
         seleccionarCapa(capaActual.id, capaActual.tipoCapa)
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-        absoluteArt.lienzo.capas.renderizar(ctx);
+        lienzoPrincipal.capas.renderizar(ctx);
         sincronizarCapaCanvasReal(capaActual);
     }
 
 }
 
 function sincronizarCapaCanvasReal(capa) {
+    /*
     const ctxActual = document.getElementById('canvas' + capa.tipoCapa + 'capa' + capa.id).getContext('2d');
     ctxActual.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
     capa.renderizar(ctxActual)
     if (capa.capaPadre !== undefined) {
         sincronizarCapaCanvasReal(capa.capaPadre)
     }
+        */
 }
 
 function moverCapaLista(capa, movimiento) {
@@ -330,9 +333,9 @@ function moverCapaLista(capa, movimiento) {
 
 function duplicarCapa() {
     if (capaActual.capaPadre) {
-        absoluteArt.lienzo.clonarCapa(capaActual.capaPadre, capaActual)
+        lienzoPrincipal.clonarCapa(capaActual.capaPadre, capaActual)
     }
-    agregarContenidoGrupo(absoluteArt.lienzo.capas)
+    agregarContenidoGrupo(lienzoPrincipal.capas)
     seleccionarCapa(capaActual.id, capaActual.tipoCapa)
 }
 
@@ -342,7 +345,7 @@ function actualizarSelectorCapaPadre() {
         borrar.remove();
     }
 
-    for (const capa of absoluteArt.lienzo.capasGrupoVivas) {
+    for (const capa of lienzoPrincipal.capasGrupoVivas) {
         if (capaActual !== capa) {
             let capaHijo = true;
             if (capaActual.tipoCapa === 'grupo') {
@@ -369,7 +372,7 @@ function actualizarSelectorCapaPadre() {
         }
     }
 
-    const capaDios = absoluteArt.lienzo.capas;
+    const capaDios = absoluteArt.lienzoPrincipal.capas;
     if (capaActual !== capaDios) {
         if (capaActual.capaPadre === capaDios) {
             select.insertAdjacentHTML('afterbegin', `
@@ -391,51 +394,45 @@ function actualizarSelectorCapaPadre() {
 }
 
 function cambiarCapaGrupo() {
-    const nuevaCapaPadre = absoluteArt.lienzo.capas.buscarGrupoCapas(Number(document.getElementById('selectorCapaPadre').value));
-    absoluteArt.lienzo.capas.moverCapaDeGrupo(capaActual, nuevaCapaPadre)
-    agregarContenidoGrupo(absoluteArt.lienzo.capas)
+    const nuevaCapaPadre = lienzoPrincipal.capas.buscarGrupoCapas(Number(document.getElementById('selectorCapaPadre').value));
+    lienzoPrincipal.capas.moverCapaDeGrupo(capaActual, nuevaCapaPadre)
+    agregarContenidoGrupo(lienzoPrincipal.capas)
     seleccionarCapa(capaActual.id, capaActual.tipoCapa)
 }
 let parametros = obtenerParametros();
 let clickeando = false;
 
-canvas.addEventListener('mousedown', (e) => {
-
+canvasDom.addEventListener('mousedown', (e) => {
     clickeando = true;
     recorrido = []; // adaptarCordCanvas(cordX,cordY,canvas)
-    recorrido.push(absoluteArt.utiles.adaptarCordCanvas(e.clientX, e.clientY, ctx))
+    recorrido.push(utiles.adaptarCordCanvas(e.clientX, e.clientY, canvasDom))
     parametros = obtenerParametros();
-
-    absoluteArt.utiles.pintarTrazo(parametros, ctx)
-
-
+    utiles.pintarTrazo(parametros, canvas)
 });
 
-canvas.addEventListener('mousemove', (e) => {
+canvasDom.addEventListener('mousemove', (e) => {
     if (clickeando) {
         parametros = obtenerParametros();
-        recorrido.push(absoluteArt.utiles.adaptarCordCanvas(e.clientX, e.clientY, ctx))
+        recorrido.push(utiles.adaptarCordCanvas(e.clientX, e.clientY, canvasDom))
 
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-        absoluteArt.lienzo.capas.renderizarHasta(ctx, absoluteArt.lienzo.capaActiva.id)
+        canvas.limpiar()
+        lienzoPrincipal.capas.renderizarHasta(canvas, lienzoPrincipal.capaActiva.id)
 
-        absoluteArt.utiles.pintarTrazo(parametros, ctx)
+        utiles.pintarTrazo(parametros, canvas)
 
-        absoluteArt.lienzo.capas.renderizarDesde(ctx, absoluteArt.lienzo.capaActiva.id)
+        lienzoPrincipal.capas.renderizarDesde(canvas, lienzoPrincipal.capaActiva.id)
     }
 });
 
-canvas.addEventListener('mouseup', (e) => {
+canvasDom.addEventListener('mouseup', (e) => {
     clickeando = false;
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+    canvas.limpiar()
 
-    recorrido.push(absoluteArt.utiles.adaptarCordCanvas(e.clientX, e.clientY, ctx))
+    recorrido.push(utiles.adaptarCordCanvas(e.clientX, e.clientY, canvasDom))
     parametros = obtenerParametros();
 
-    absoluteArt.lienzo.capaActiva.guardarTrazo(parametros);
-    absoluteArt.lienzo.capas.renderizar(ctx);
+    lienzoPrincipal.capaActiva.guardarTrazo(parametros);
+    lienzoPrincipal.capas.renderizar(canvas);
 
     sincronizarCapaCanvasReal(capaActual);
 });
-
-

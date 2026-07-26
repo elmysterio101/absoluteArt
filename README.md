@@ -6,3 +6,4 @@ Si ves el estado actual de absoluteArt es un provisorio , lo unico que se va a m
 el script.js es un controlador de absoluteArt momentaneo , pronto se reducira a los 3 eventListener y el ctx.
 
 https://absoluteart.vercel.app/
+

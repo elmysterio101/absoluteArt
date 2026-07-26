@@ -1,176 +1,157 @@
-const absoluteArt = {} // heramientas
 
-class historial {
-    constructor(frecuenciaCapturas, trayectoMuyLargo, limiteCapturasHistorial, ctx) {
-        this.frecuenciaTrazos = frecuenciaCapturas;// de base son 10
-        this.trayectoMuyLargo = trayectoMuyLargo; // de base son 1k
-        this.limiteCapturasHistorial = limiteCapturasHistorial; // de base son 10
-        this.ctx = ctx;
+class lienzoBase {
+    constructor(largo, alto) {
+        this.largo = largo;
+        this.alto = alto;
+        this.canvas = undefined
     }
-    trazosRevertidos = [];
-    historialTrazos = [];
-    historialCapturas = []; // {captura:, indice:}
 
-    revertirTrazo() {
-        if (this.historialTrazos.length > 0) {
-            this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height)
-            this.trazosRevertidos.push(this.historialTrazos[this.historialTrazos.length - 1])
-            if (this.historialCapturas.length > 0) {
-                if (this.historialCapturas[this.historialCapturas.length - 1].indice === this.historialTrazos.length - 1) {
-                    this.historialCapturas.pop();
-                }
-            }
-            this.historialTrazos.pop()
-            this.pintarHistorial(this.ctx);
-        }
+    pegarLienzo(lienzo, x, y) { // pegar en ESTE lienzo
+        console.log("funcion pegarLienzo no hecha")
     }
-    recuperarTrazo() {
-        if (this.trazosRevertidos.length > 0) {
-            this.historialTrazos.push(this.trazosRevertidos[this.trazosRevertidos.length - 1])
-            this.trazosRevertidos.pop();
-            const ultTrazo = this.historialTrazos[this.historialTrazos.length - 1];
-            absoluteArt.utiles.pintarTrazo(ultTrazo, this.ctx)
-        }
+
+    redimenzionar(u, r, d, l) { // como en el cubo rubik 3x3 ,Up Right Down Left, en sentido horario, es aumento o decenso para que no crezca o se achique siempre perdiendo contenido del mismo lado
+        console.log("funcion redimenzionar no hecha")
     }
-    guardarHistorial(trazo) {
-        this.guardarTrazo(trazo);
-        if (this.debeGuardarCaptura(trazo)) {
-            absoluteArt.utiles.pintarTrazo(trazo, this.ctx)
-            this.guardarCaptura(trazo);
+
+    pintarPixel(x, y, rgba) {
+        console.log("funcion pintarPixel no hecha")
+    }
+
+    limpiarPixel(x, y) {
+        console.log("funcion limpiarPixel no hecha")
+    }
+
+    pintarLinea(x1, y1, x2, y2, grosor, rgba) {
+        console.log("funcion pintarLinea no hecha")
+    }
+
+    limpiarRectangulo(x, y, largo, ancho, rgba) {
+        console.log("funcion limpiarRectangulo no hecha")
+    }
+
+    pintarRectangulo(x, y, largo, ancho, rgba) {
+        console.log("funcion pintarRectangulo no hecha")
+    }
+
+}
+
+class lienzoHtml extends lienzoBase {
+    constructor(largo, alto, canvas) {
+        super(largo, alto)
+        if (canvas) {
+            this.canvas = canvas;
         } else {
-            absoluteArt.utiles.pintarTrazo(trazo, this.ctx)
+            this.canvas = document.createElement('canvas')
         }
+        this.ctx = this.canvas.getContext('2d')
+        this.canvas.width = this.largo
+        this.canvas.height = this.alto
     }
-    guardarTrazo(trazo) {
-        this.trazosRevertidos = [];
-        if (trazo.contexto.categoriaHerramienta === "pinceles") {
-            this.historialTrazos.push(absoluteArt.utiles.eliminarTrayectoInutil(trazo))
-        } else {
-            this.historialTrazos.push(absoluteArt.utiles.borrarRecorridoIntermedio(trazo))
-        }
+
+    pegarLienzo({ lienzo, x, y }) { // pegar en ESTE lienzo
+        this.ctx.drawImage(lienzo.canvas, x, y)
     }
-    pintarHistorial(ctx) {
-        if (this.historialTrazos.length > 0) {
-            this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height)
-            this.cargarUltimaCaptura();
 
+    redimenzionar({ u, r, d, l }) {
+        const canvasProvisional = document.createElement('canvas')
+        canvasProvisional.width = this.largo;
+        canvasProvisional.height = this.alto;
+        canvasProvisional.getContext('2d').drawImage(this.canvas, 0, 0);
+        this.canvas.width = this.largo + r + l
+        this.canvas.height = this.alto + u + d
+        this.ctx.drawImage(canvasProvisional, l, u)
+    }
 
-            const cantTrazos = this.trazosDesdeUltimaCaptura();
-            const trazos = this.historialTrazos;
-            for (let i = 0; i < cantTrazos; i++) {
-                const indiceTrazo = trazos.length - cantTrazos + i;
-                const trazoActual = trazos[indiceTrazo];
-                absoluteArt.utiles.pintarTrazo(trazoActual, this.ctx)
+    pintarPixel({ x, y, r, g, b, a }) {
+        console.log({ x, y, r, g, b, a })
+        this.ctx.fillStyle = 'rgba(' + r + ' , ' + g + ' , ' + b + ' , ' + a + ')';
+        this.ctx.fillRect(x, y, 1, 1)
+    }
+
+    limpiarPixel({ x, y }) {
+        this.ctx.clearRect(x, y, 1, 1)
+    }
+
+    pintarLinea({ x1, y1, x2, y2, grosor, r, g, b, a }) {
+        this.ctx.lineWidth = grosor;
+        this.ctx.strokeStyle = 'rgba(' + r + ' , ' + g + ' , ' + b + ' , ' + a + ')';
+        this.ctx.beginPath();
+        this.ctx.moveTo(x1, y1)
+        this.ctx.lineTo(x2, y2)
+        this.ctx.stroke();
+    }
+
+    pintarTrayectoLineas({ trayecto, grosor, r, g, b, a }) {
+        if (trayecto.length > 1) {
+            this.ctx.lineWidth = grosor;
+            this.ctx.strokeStyle = 'rgba(' + r + ' , ' + g + ' , ' + b + ' , ' + a + ')';
+            this.ctx.beginPath();
+            for (let i = 0; i < trayecto.length - 1; i++) {
+                this.ctx.moveTo(trayecto[i].x, trayecto[i].y)
+                this.ctx.lineTo(trayecto[i + 1].x, trayecto[i + 1].y)
             }
-            //absoluteArt.herramientasCanvas.pintarTrazos(this.trazosDesdeUltimaCaptura(), this.historialTrazos, this.ctx)
+            this.ctx.stroke();
         }
     }
-    guardarCaptura() {
-        const canvasTrucho = document.createElement("canvas")
-        canvasTrucho.width = this.ctx.canvas.width
-        canvasTrucho.height = this.ctx.canvas.height
-        const ctxTrucho = canvasTrucho.getContext('2d')
-        ctxTrucho.drawImage(this.ctx.canvas, 0, 0)
-        this.historialCapturas.push({ captura: canvasTrucho, indice: this.historialTrazos.length })
 
-        if (this.historialCapturas.length > this.limiteCapturasHistorial) {
-            this.historialCapturas.splice(0, 1)
-        }
+    limpiarRectangulo({ x, y, largo, alto }) {
+        this.ctx.clearRect(x, y, largo, alto);
     }
-    debeGuardarCaptura(trazo) {
-        let guardarEstado = false;
-        if (this.trazosDesdeUltimaCaptura() >= this.frecuenciaTrazos ||
-            trazo.contexto.recorrido.length >= this.trayectoMuyLargo && trazo.contexto.categoriaHerramienta === "pinceles" ||
-            this.historialCapturas.length == 0 && this.historialTrazos.length >= this.frecuenciaTrazos) {
-            guardarEstado = true;
-        }
-        return guardarEstado;
-    }
-    renderizarUltimaCaptura(ctx) {
-        if (this.historialCapturas.length > 0) {
-            ctx.drawImage(this.historialCapturas[this.historialCapturas.length - 1].captura, 0, 0)
-        }
-    }
-    trazosDesdeUltimaCaptura() { //
-        let cantidadTrazos = this.historialTrazos.length;
-        if (this.historialCapturas.length > 0) {
-            cantidadTrazos = ((this.historialTrazos.length - 1) - (this.historialCapturas[this.historialCapturas.length - 1].indice) + 1);
-        }
-        return cantidadTrazos;
-    }
-    cargarTodosLosTrazos(ctx) {
-        if (this.historialTrazos.length > 0) {
-            for (const trazo of this.historialTrazos) {
-                absoluteArt.utiles.pintarTrazo(trazo, ctx)
-            }
-        }
-    }
-    cargarUltimaCaptura() { // sin razon de cambio
-        if (this.historialCapturas.length > 0) {
-            const captura = this.historialCapturas[this.historialCapturas.length - 1].captura;
-            this.ctx.drawImage(captura, 0, 0)
-        }
-    }
-    clonarHistorialTrazos(historial) {
-        const clonHistorial = []
-        for (let i = 0; i < historial.length; i++) {
-            const trazo = historial[i];
-            const trazoCopiado = {
-                colorPrincipal: { r: trazo.colorPrincipal.r, g: trazo.colorPrincipal.g, b: trazo.colorPrincipal.b },
-                colorSecundario: { r: trazo.colorSecundario.r, g: trazo.colorSecundario.g, b: trazo.colorSecundario.b },
-                contexto: {
-                    categoriaHerramienta: trazo.contexto.categoriaHerramienta,
-                    herramienta: trazo.contexto.herramienta,
-                    tipoHerramienta: trazo.contexto.tipoHerramienta
-                },
-                grosorLinea: trazo.grosorLinea,
-                opacidadPrincipal: trazo.opacidadPrincipal,
-                opacidadSecundaria: trazo.opacidadSecundaria
-            }
 
-            const recorrido = [];
-
-            for (let n = 0; n < trazo.contexto.recorrido.length; n++) {
-                const mov = trazo.contexto.recorrido[n]
-
-                recorrido.push({ x: mov.x, y: mov.y })
-            }
-            trazoCopiado.contexto.recorrido = recorrido
-
-            clonHistorial.push(trazoCopiado)
-        }
-
-        return clonHistorial;
+    pintarRectangulo({ x, y, largo, alto, r, g, b, a }) {
+        this.ctx.fillStyle = 'rgba(' + r + ' , ' + g + ' , ' + b + ' , ' + a + ')';
+        this.ctx.fillRect(x, y, largo, alto)
     }
-    clonarCapturas() {
-        const clonHistorial = []
-        for (let i = 0; i < this.historialCapturas.length; i++) {
-            const capt = this.historialCapturas[i]
-            const canvasClon = document.createElement('canvas');
-            canvasClon.width = capt.captura.width
-            canvasClon.height = capt.captura.height
-            canvasClon.getContext('2d').drawImage(capt.captura, 0, 0)
 
-            clonHistorial.push({ indice: capt.indice, captura: canvasClon })
+    pintarElipse({ x1, y1, x2, y2, grosor, r, g, b, a, rotacion, inicio, fin }) {
+        this.ctx.lineWidth = grosor;
+        this.ctx.strokeStyle = 'rgba(' + r + ' , ' + g + ' , ' + b + ' , ' + a + ')';
+        let radioX = (x1 - x2) / 2
+        let radioY = (y1 - y2) / 2
+        let centroX = x1 + radioX;
+        let centroY = y1 + radioY;
+        if (x1 < x2) {
+            radioX = radioX * -1
+            centroX = x2 + radioX;
         }
+        if (y1 < y2) {
+            radioY = radioY * -1
+            centroY = y2 + radioY;
 
-        return clonHistorial
+        }
+        this.ctx.beginPath();
+        this.ctx.ellipse(
+            centroX,
+            centroY,
+            radioX,
+            radioY,
+            rotacion,
+            inicio,
+            fin
+        );
+        this.ctx.stroke();
     }
-    clonarArrays() {
+
+    limpiar() {
+        this.ctx.clearRect(0, 0, this.largo, this.alto)
+    }
+
+    obtenerPixel({ x, y }) {
+        const pixel = this.ctx.getImageData(x, y, 1, 1).data;
+
         return {
-            trazosRevertidos: this.clonarHistorialTrazos(this.trazosRevertidos),
-            historialTrazos: this.clonarHistorialTrazos(this.historialTrazos),
-            historialCapturas: this.clonarCapturas()
-        }
+            r: pixel[0],
+            g: pixel[1],
+            b: pixel[2],
+            a: pixel[3]
+        };
     }
 }
 
 class capaBase {
     constructor(capaPadre, idCapa, anchoCanvas, altoCanvas) {
-        this.canvas = document.createElement('canvas')
-        this.canvas.height = altoCanvas;
-        this.canvas.width = anchoCanvas;
-        this.ctx = this.canvas.getContext('2d');
+        this.lienzo = lienzo.obtener(anchoCanvas, altoCanvas)
         this.id = idCapa
         this.capaPadre = capaPadre;
     }
@@ -178,41 +159,39 @@ class capaBase {
     y = 0;
     visible = true;
     opacidad = 1;
-
     renderizar() {
-
     }
 }
 
-class grupoCapas extends capaBase {
+class grupoCapas extends capaBase { // ctx cambiado
     constructor(capaPadre, idCapa, anchoCanvas, altoCanvas) {
         super(capaPadre, idCapa, anchoCanvas, altoCanvas)
         this.nombre = 'grupo ' + idCapa
     }
     tipoCapa = 'grupo';
     contenido = [];
-    renderizar(ctx) {
+    renderizar(lienzo) {
         if (this.visible) {
             if (this.contenido.length > 0) {
                 for (const capa of this.contenido) {
-                    capa.renderizar(ctx);
+                    capa.renderizar(lienzo);
                 }
             }
         }
     }
-    renderizarHasta(ctx, idCapaLimite) {
+    renderizarHasta(lienzo, idCapaLimite) {
         for (const capa of this.contenido) {
-            capa.renderizar(ctx);
+            capa.renderizar(lienzo);
             if (capa.id === idCapaLimite) {
                 return;
             }
         }
     }
-    renderizarDesde(ctx, idCapaLimite) {
+    renderizarDesde(lienzo, idCapaLimite) {
         let capaEncontrada = false;
         for (const capa of this.contenido) {
             if (capaEncontrada) {
-                capa.renderizar(ctx);
+                capa.renderizar(lienzo);
 
             }
             if (capa.id === idCapaLimite) {
@@ -233,9 +212,9 @@ class grupoCapas extends capaBase {
             }
         }
     }
-    buscarGrupoCapas(id) {
+    buscarGrupoCapas(id) { // arreglar lo de la ubicacion absolute de lienzoPrincipal , no deberian manejar absolutez en ningun contexto sin importar que 
         if (id === 0) {
-            return absoluteArt.lienzo.capas; // capa " dios " digamos
+            return absoluteArt.lienzoPrincipal.capas; // capa " dios " digamos
         }
         if (this.contenido.length > 0) {
             for (const lugar of this.contenido) {
@@ -334,7 +313,7 @@ class grupoCapas extends capaBase {
             this.canvas.height,
         )
 
-        clonCapa.ctx.drawImage(this.canvas, 0, 0)
+        clonCapa.lienzo.pegarLienzo({lienzo: this.lienzo, y: 0, x: 0})
         clonCapa.x = this.x
         clonCapa.y = this.y
         clonCapa.opacidad = this.opacidad
@@ -352,14 +331,15 @@ class grupoCapas extends capaBase {
 
 }
 
-class capa extends capaBase {
+class capa extends capaBase { // ctx cambiado
     constructor(capaPadre, idCapa, anchoCanvas, altoCanvas, frecuenciaCapturas, trayectoMuyLargo, limiteCapturasHistorial) {
         super(capaPadre, idCapa, anchoCanvas, altoCanvas)
         this.historial = new historial(
             frecuenciaCapturas,
             trayectoMuyLargo,
             limiteCapturasHistorial,
-            this.ctx);
+            this.lienzo
+        );
         this.nombre = 'capa ' + idCapa
     }
     tipoCapa = 'individual';
@@ -373,17 +353,17 @@ class capa extends capaBase {
     recuperarTrazo() {
         this.historial.recuperarTrazo();
     }
-    renderizar(ctx) {
+    renderizar(lienzo) {
         if (this.visible) {
-            ctx.drawImage(this.canvas, this.x, this.y)
+            lienzo.pegarLienzo({ lienzo: this.lienzo, x: this.x, y: this.y })
         }
     }
     clonar(capaPadre, idCopia) {
         const clonCapa = new capa(
             capaPadre,
             idCopia,
-            this.canvas.width,
-            this.canvas.height,
+            this.lienzo.largo,
+            this.lienzo.alto,
             this.historial.frecuenciaTrazos,
             this.historial.trayectoMuyLargo,
             this.historial.limiteCapturasHistorial
@@ -394,9 +374,9 @@ class capa extends capaBase {
         clonCapa.historial.trazosRevertidos = copiaArrays.trazosRevertidos
         clonCapa.historial.historialTrazos = copiaArrays.historialTrazos
         clonCapa.historial.historialCapturas = copiaArrays.historialCapturas
-        clonCapa.historial.ctx = clonCapa.ctx
+        clonCapa.historial.lienzo = clonCapa.lienzo
 
-        clonCapa.ctx.drawImage(this.canvas, 0, 0)
+        clonCapa.lienzo.pegarLienzo({lienzo : this.lienzo,x:  0,y: 0})
         clonCapa.x = this.x
         clonCapa.y = this.y
         clonCapa.opacidad = this.opacidad
@@ -407,8 +387,167 @@ class capa extends capaBase {
         return clonCapa;
     }
 }
+class historial {
+    constructor(frecuenciaCapturas, trayectoMuyLargo, limiteCapturasHistorial, lienzo) {
+        this.frecuenciaTrazos = frecuenciaCapturas;// de base son 10
+        this.trayectoMuyLargo = trayectoMuyLargo; // de base son 1k
+        this.limiteCapturasHistorial = limiteCapturasHistorial; // de base son 10
+        this.lienzo = lienzo;
+    }
+    trazosRevertidos = [];
+    historialTrazos = [];
+    historialCapturas = []; // {captura:, indice:}
 
-absoluteArt.lienzo = {
+    revertirTrazo() {
+        if (this.historialTrazos.length > 0) {
+            this.lienzo.limpiar()
+            this.trazosRevertidos.push(this.historialTrazos[this.historialTrazos.length - 1])
+            if (this.historialCapturas.length > 0) {
+                if (this.historialCapturas[this.historialCapturas.length - 1].indice > this.historialTrazos.length - 1) {
+                    this.historialCapturas.pop();
+                }
+            }
+            this.historialTrazos.pop()
+            this.pintarHistorial(this.lienzo);
+        }
+    }
+    recuperarTrazo() {
+        if (this.trazosRevertidos.length > 0) {
+            this.historialTrazos.push(this.trazosRevertidos[this.trazosRevertidos.length - 1])
+            this.trazosRevertidos.pop();
+            const ultTrazo = this.historialTrazos[this.historialTrazos.length - 1];
+            absoluteArt.utiles.pintarTrazo(ultTrazo, this.lienzo)
+        }
+    }
+    guardarHistorial(trazo) {
+        this.guardarTrazo(trazo);
+        if (this.debeGuardarCaptura(trazo)) {
+            absoluteArt.utiles.pintarTrazo(trazo, this.lienzo)
+            this.guardarCaptura(trazo);
+        } else {
+            absoluteArt.utiles.pintarTrazo(trazo, this.lienzo)
+        }
+    }
+    guardarTrazo(trazo) {
+        this.trazosRevertidos = [];
+        if (trazo.contexto.categoriaHerramienta === "pinceles") {
+            this.historialTrazos.push(absoluteArt.utiles.eliminarTrayectoInutil(trazo))
+        } else {
+            this.historialTrazos.push(absoluteArt.utiles.borrarRecorridoIntermedio(trazo))
+        }
+    }
+    pintarHistorial() { // lienzo acomodado
+        if (this.historialTrazos.length > 0) {
+            this.lienzo.limpiar()
+            this.cargarUltimaCaptura();
+
+
+            const cantTrazos = this.trazosDesdeUltimaCaptura();
+            const trazos = this.historialTrazos;
+            for (let i = 0; i < cantTrazos; i++) {
+                const indiceTrazo = trazos.length - cantTrazos + i;
+                const trazoActual = trazos[indiceTrazo];
+                absoluteArt.utiles.pintarTrazo(trazoActual, this.lienzo)
+            }
+        }
+    }
+    guardarCaptura() {  // creo que acomodado
+        const canvasTrucho = lienzo.obtener(this.lienzo.largo, this.lienzo.alto)
+        canvasTrucho.pegarLienzo({ lienzo: this.lienzo, x: 0, y: 0 })
+        this.historialCapturas.push({ captura: canvasTrucho, indice: this.historialTrazos.length })
+
+        if (this.historialCapturas.length > this.limiteCapturasHistorial) {
+            this.historialCapturas.splice(0, 1)
+        }
+    }
+    debeGuardarCaptura(trazo) {
+        let guardarEstado = false;
+        if (this.trazosDesdeUltimaCaptura() >= this.frecuenciaTrazos ||
+            trazo.contexto.recorrido.length >= this.trayectoMuyLargo && trazo.contexto.categoriaHerramienta === "pinceles" ||
+            this.historialCapturas.length == 0 && this.historialTrazos.length >= this.frecuenciaTrazos) {
+            guardarEstado = true;
+        }
+        return guardarEstado;
+    }
+    renderizarUltimaCaptura(lienzo) { // lienzo acomodado creo
+        if (this.historialCapturas.length > 0) {
+            lienzo.pegarLienzo({lienzo : this.historialCapturas[this.historialCapturas.length - 1].captura, x: 0,y: 0})
+        }
+    }
+    trazosDesdeUltimaCaptura() { //
+        let cantidadTrazos = this.historialTrazos.length;
+        if (this.historialCapturas.length > 0) {
+            cantidadTrazos = ((this.historialTrazos.length - 1) - (this.historialCapturas[this.historialCapturas.length - 1].indice) + 1);
+        }
+        return cantidadTrazos;
+    }
+    cargarTodosLosTrazos(ctx) {
+        if (this.historialTrazos.length > 0) {
+            for (const trazo of this.historialTrazos) {
+                absoluteArt.utiles.pintarTrazo(trazo, ctx)
+            }
+        }
+    }
+    cargarUltimaCaptura() { // lienzo acomodado creo
+        if (this.historialCapturas.length > 0) {
+            const captura = this.historialCapturas[this.historialCapturas.length - 1].captura;
+            this.lienzo.pegarLienzo({lienzo : captura, x : 0, y : 0})
+        }
+    }
+    clonarHistorialTrazos(historial) {
+        const clonHistorial = []
+        for (let i = 0; i < historial.length; i++) {
+            const trazo = historial[i];
+            const trazoCopiado = {
+                colorPrincipal: { r: trazo.colorPrincipal.r, g: trazo.colorPrincipal.g, b: trazo.colorPrincipal.b },
+                colorSecundario: { r: trazo.colorSecundario.r, g: trazo.colorSecundario.g, b: trazo.colorSecundario.b },
+                contexto: {
+                    categoriaHerramienta: trazo.contexto.categoriaHerramienta,
+                    herramienta: trazo.contexto.herramienta,
+                    tipoHerramienta: trazo.contexto.tipoHerramienta
+                },
+                grosorLinea: trazo.grosorLinea,
+                opacidadPrincipal: trazo.opacidadPrincipal,
+                opacidadSecundaria: trazo.opacidadSecundaria
+            }
+
+            const recorrido = [];
+
+            for (let n = 0; n < trazo.contexto.recorrido.length; n++) {
+                const mov = trazo.contexto.recorrido[n]
+
+                recorrido.push({ x: mov.x, y: mov.y })
+            }
+            trazoCopiado.contexto.recorrido = recorrido
+
+            clonHistorial.push(trazoCopiado)
+        }
+
+        return clonHistorial;
+    }
+    clonarCapturas() { // aparentemente acomodado
+        const clonHistorial = []
+        for (let i = 0; i < this.historialCapturas.length; i++) {
+            const capt = this.historialCapturas[i]
+            const canvasClon = lienzo.obtener(capt.captura.largo, capt.captura.alto); 
+            console.log(canvasClon)
+            canvasClon.pegarLienzo({lienzo : capt.captura, y : 0,x: 0})
+
+            clonHistorial.push({ indice: capt.indice, captura: canvasClon })
+        }
+
+        return clonHistorial
+    }
+    clonarArrays() {
+        return {
+            trazosRevertidos: this.clonarHistorialTrazos(this.trazosRevertidos),
+            historialTrazos: this.clonarHistorialTrazos(this.historialTrazos),
+            historialCapturas: this.clonarCapturas()
+        }
+    }
+}
+
+const lienzoPrincipal = {
     confCapas: {
         frecuenciaCapturas: 10,
         trayectoMuyLargo: 1000,
@@ -528,13 +667,12 @@ absoluteArt.lienzo = {
     },
 
 }
-absoluteArt.herramientasCanvas = {
-    vaciar(ctx) {
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-    }
-
+const lienzo = {
+    obtener(ancho, alto) {
+        return new lienzoHtml(ancho, alto)
+    },
 }
-absoluteArt.utiles = {
+const utiles = {
     datosCuadrilatero(trayecto) {
         let x = 0;
         let y = 0;
@@ -586,70 +724,46 @@ absoluteArt.utiles = {
         return trayectoOptimizado;
     },
     medidaPixelesCanvas(canvas) {// dice cuantos pixeles reales mide uno de canvas  // recibe el canvas ya en  contexto osea el ctx como dice gemini
-        const canvasInfo = canvas.canvas.getBoundingClientRect();
-        const medidasCanvas = { real: { w: canvas.canvas.width, h: canvas.canvas.height }, css: { w: canvasInfo.width, h: canvasInfo.height } }
+        const canvasInfo = canvas.getBoundingClientRect();
+        const medidasCanvas = { real: { w: canvas.width, h: canvas.height }, css: { w: canvasInfo.width, h: canvasInfo.height } }
 
 
-        return { ancho: (canvasInfo.width / canvas.canvas.width), alto: (canvasInfo.height / canvas.canvas.height) };
+        return { ancho: (canvasInfo.width / canvas.width), alto: (canvasInfo.height / canvas.height) };
     },
     adaptarCordCanvas(cordX, cordY, canvas) {//usar para convertir la cordenada obtenida para que sea la cordenada real tocada del canvas
         const tamanio = this.medidaPixelesCanvas(canvas);
-        const ubicacionClick = this.obtUbicClickElem(cordX, cordY, canvas.canvas);
+        const ubicacionClick = this.obtUbicClickElem(cordX, cordY, canvas);
         return { x: ((ubicacionClick.x / tamanio.ancho) | 0) + 0.5, y: ((ubicacionClick.y / tamanio.alto) | 0) + 0.5 };
     },
     obtUbicClickElem(cordX, cordY, elemento) {
         const infoObjeto = { x: elemento.getBoundingClientRect().x, y: elemento.getBoundingClientRect().y };
         return { x: cordX - infoObjeto.x, y: cordY - infoObjeto.y };
     },
-    pintarTrazo(trazo, ctx) {
-        absoluteArt[trazo.contexto.tipoHerramienta]?.[trazo.contexto.categoriaHerramienta]?.[trazo.contexto.herramienta](trazo, ctx)
-            ?? absoluteArt[trazo.contexto.tipoHerramienta]?.[trazo.contexto.herramienta]?.(trazo, ctx);
-    }
+    pintarTrazo(trazo, lienzo) {
+        absoluteArt[trazo.contexto.tipoHerramienta]?.[trazo.contexto.categoriaHerramienta]?.[trazo.contexto.herramienta](trazo, lienzo)
+            ?? absoluteArt[trazo.contexto.tipoHerramienta]?.[trazo.contexto.herramienta]?.(trazo, lienzo);
+    },
 }
-absoluteArt.dibujo = {
+const dibujo = {
     figuras: {
-        lineaRedondeada(conf, ctx) { // acomodar posicion de los circulos , recortar medio grosor la linea en cada lado y evitar solapamiento de alpha
-            if (conf.contexto.recorrido[0].x !== conf.contexto.recorrido[conf.contexto.recorrido.length - 1].x ||
-                conf.contexto.recorrido[0].y !== conf.contexto.recorrido[conf.contexto.recorrido.length - 1].y) {
-
-                const cordInicial = conf.contexto.recorrido[0];
-                const cordFinal = conf.contexto.recorrido[conf.contexto.recorrido.length - 1];
-                const colPrin = conf.colorPrincipal
-
-                ctx.beginPath();
-
-                ctx.lineWidth = conf.grosorLinea;
-                ctx.strokeStyle = 'rgba(' + colPrin.r + ',' + colPrin.g + ',' + colPrin.b + ',' + conf.opacidadPrincipal + ')';
-                ctx.fillStyle = 'rgba(' + colPrin.r + ',' + colPrin.g + ',' + colPrin.b + ',' + conf.opacidadPrincipal + ')';
-
-                ctx.arc(cordInicial.x, cordInicial.y, conf.grosorLinea / 2, 0, Math.PI * 2);
-                ctx.moveTo(cordInicial.x, cordInicial.y);
-                ctx.lineTo(cordInicial.x, cordInicial.y);
-                ctx.lineTo(cordFinal.x, cordFinal.y);
-                ctx.moveTo(cordFinal.x, cordFinal.y);
-                ctx.arc(cordFinal.x, cordFinal.y, conf.grosorLinea / 2, 0, Math.PI * 2);
-
-                ctx.fill()
-            }
-        },
-
-        lineaBrusca(conf, ctx) {
+        lineaBrusca(conf, lienzo) {
             if (conf.contexto.recorrido[0].x !== conf.contexto.recorrido[conf.contexto.recorrido.length - 1].x ||
                 conf.contexto.recorrido[0].y !== conf.contexto.recorrido[conf.contexto.recorrido.length - 1].y
             ) {
-                const cordInicial = conf.contexto.recorrido[0];
-                const cordFinal = conf.contexto.recorrido[conf.contexto.recorrido.length - 1];
-                const colPrin = conf.colorPrincipal
+                const col = conf.colorPrincipal
+                const cord = conf.contexto.recorrido
 
-                ctx.beginPath();
-
-                ctx.lineWidth = conf.grosorLinea;
-                ctx.strokeStyle = 'rgba(' + colPrin.r + ',' + colPrin.g + ',' + colPrin.b + ',' + conf.opacidadPrincipal + ')';
-
-                ctx.moveTo(cordInicial.x, cordInicial.y)
-                ctx.lineTo(cordFinal.x, cordFinal.y)
-
-                ctx.stroke();
+                lienzo.pintarLinea({
+                    r: col.r,
+                    g: col.g,
+                    b: col.b,
+                    a: conf.opacidadPrincipal,
+                    grosor: conf.grosorLinea,
+                    x1: cord[0].x,
+                    y1: cord[0].y,
+                    x2: cord[cord.length - 1].x,
+                    y2: cord[cord.length - 1].y,
+                })
 
             }
         },
@@ -719,29 +833,12 @@ absoluteArt.dibujo = {
         }
     },
     pinceles: {
-        // agregar array de pinceles optimizables
         clasico(conf, ctx) {
-            ctx.fillStyle = `rgba(${conf.colorPrincipal.r}, ${conf.colorPrincipal.g}, ${conf.colorPrincipal.b}, ${conf.opacidadPrincipal})`;
-            ctx.beginPath();
-            for (const cord of conf.contexto.recorrido) {
-                ctx.moveTo(cord.x + conf.grosorLinea / 2, cord.y);
-                ctx.arc(cord.x, cord.y, conf.grosorLinea / 2, 0, Math.PI * 2);
-            }
-            ctx.fill();
-        },
-
-        continuo(conf, ctx) {
-            console.log(" programa el pincel continuo gil")
-        }
-    },
-
-    herramientas: {
-        borrador(conf, ctx) {
         }
     }
 }
-absoluteArt.configuracion = {
-    configurarEsteticaCanvas(canvas) {
+const configuracion = {
+    configurarEsteticaCanvas(canvas) { // se lo pedi a gemini
         const ctx = canvas.getContext('2d');
         ctx.imageSmoothingEnabled = false;
 
@@ -754,17 +851,28 @@ absoluteArt.configuracion = {
         canvas.style.imageRendering = 'crisp-edges'; // me lo tiro gemini , para el navegador de mierda pq lo difumina
     },
     agregarCapaBase() {
-        absoluteArt.lienzo.capas = new grupoCapas(undefined, absoluteArt.lienzo.conteoGrupoCapas, absoluteArt.lienzo.confCapas.anchoCanvas, absoluteArt.lienzo.confCapas.altoCanvas);
-        absoluteArt.lienzo.grupoCapasActiva = absoluteArt.lienzo.capas;
-        absoluteArt.lienzo.capaActiva = new capa(absoluteArt.lienzo.capas,
-            absoluteArt.lienzo.conteoCapas,
-            absoluteArt.lienzo.confCapas.anchoCanvas,
-            absoluteArt.lienzo.confCapas.altoCanvas,
-            absoluteArt.lienzo.confCapas.frecuenciaCapturas,
-            absoluteArt.lienzo.confCapas.trayectoMuyLargo,
-            absoluteArt.lienzo.confCapas.limiteCapturasHistorial,)
-        absoluteArt.lienzo.capas.contenido.push(absoluteArt.lienzo.capaActiva)
-        absoluteArt.lienzo.capasIndividualesVivas.push(absoluteArt.lienzo.capaActiva)
+        const lienzo = absoluteArt.lienzoPrincipal;
+        lienzo.capas = new grupoCapas(undefined, lienzo.conteoGrupoCapas, lienzo.confCapas.anchoCanvas, lienzo.confCapas.altoCanvas);
+        lienzo.grupoCapasActiva = lienzo.capas;
+        lienzo.capaActiva = new capa(lienzo.capas,
+            lienzo.conteoCapas,
+            lienzo.confCapas.anchoCanvas,
+            lienzo.confCapas.altoCanvas,
+            lienzo.confCapas.frecuenciaCapturas,
+            lienzo.confCapas.trayectoMuyLargo,
+            lienzo.confCapas.limiteCapturasHistorial,
+        )
+        lienzo.capas.contenido.push(lienzo.capaActiva)
+        lienzo.capasIndividualesVivas.push(lienzo.capaActiva)
     }
 }
 
+
+
+const absoluteArt = {
+    lienzoPrincipal,
+    lienzo,
+    utiles,
+    dibujo,
+    configuracion
+}

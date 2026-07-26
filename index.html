@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/styles.css">
-    <title>Absolute Art</title>
+    <link rel="stylesheet" href="styles.css">
+    <title>AbsoluteArt</title>
 </head>
 
 <body>
@@ -95,7 +95,7 @@
 
     <section class="lienzo">
         <div class="seccionIzquierda">
-
+            
             <div class="configuracionLapizFondo">
                 <div class="rango">
                     <p>grosor</p>
@@ -122,34 +122,25 @@
 
             </div>
 
-            <div id="historialTrazos">
+            <div id="historialTrazos" style="display: none;">
                 <button type="button" class="configuracionTrazos">
                     configuracion listado
                 </button>
-
+                
                 <div id="listaTrazos">
                     <button type="button" class="trazo">
                         <p>indice trazo</p>
-                        <canvas id="trazo1"></canvas>
+                        <canvas id="trazo1" width="200" height="100"></canvas>
                     </button>
                     <button type="button" class="trazo">
                         <p>indice trazo</p>
-                        <canvas></canvas>
+                        <canvas id="trazo2" width="200" height="100"></canvas>
                     </button>
                     <button type="button" class="trazo">
                         <p>indice trazo</p>
-                        <canvas></canvas>
-                    </button>
-                    <button type="button" class="trazo">
-                        <p>indice trazo</p>
-                        <canvas></canvas>
-                    </button>
-                    <button type="button" class="trazo">
-                        <p>indice trazo</p>
-                        <canvas></canvas>
+                        <canvas id="trazo3" width="200" height="100" ></canvas>
                     </button>
                 </div>
-                
             </div>
         </div>
 

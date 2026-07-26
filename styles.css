@@ -88,8 +88,8 @@ body {
 }
 
 #canvasPrincipal {
-    height: 720px;
-    width: 1280px;
+    height: 79vh;
+    aspect-ratio: 16/9;
     background-color: white;
     position: absolute;
     top: 50%;
@@ -355,7 +355,6 @@ select {
     height: 100%;
 }
 
-
 .variablesCapa .variableCapa button {
     width: 30%;
 }
@@ -364,8 +363,6 @@ select {
     display: flex;
     justify-content: space-between;
 }
-
-
 
 #historialTrazos {
     background-color: powderblue;
