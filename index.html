@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <meta charset="UTF-8">
@@ -64,21 +64,11 @@
             <button type="button" id="recuperarTrazo" onclick="recuperarTrazo()">adeltante</button>
         </div>
         <div class="barraHerramientas">
-            <select id="herramientas" oninput="tipoHerramienta = 'dibujo' , 
-                                                categoriaHerramienta = 'herramientas' , 
-                                                herramienta = document.getElementById('herramientas').value">
-                <option value="undefined"> no seleccionar este sino es para cambiar herramienta</option>
+            <select id="herramientas">
             </select>
-            <select id="pinceles" oninput="tipoHerramienta = 'dibujo' , 
-                                           categoriaHerramienta = 'pinceles' , 
-                                            herramienta = document.getElementById('pinceles').value">
-                <option value="undefined"> no seleccionar este sino es para cambiar herramienta</option>
-            </select>
-            <select id="figuras" oninput="tipoHerramienta = 'dibujo' , 
-                                          categoriaHerramienta = 'figuras' , 
-                                          herramienta = document.getElementById('figuras').value">
-                <option value="undefined"> no seleccionar este sino es para cambiar herramienta</option>
-            </select>
+
+            <button type="button" onclick="nombreHerramienta = document.getElementById('herramientas').value"> seleccionar herramienta</button>
+
             <div class="color">
                 <p>colorPrincipal</p>
                 <input type="color" name="" id="colorPrincipal"
@@ -99,17 +89,17 @@
             <div class="configuracionLapizFondo">
                 <div class="rango">
                     <p>grosor</p>
-                    <input type="range" name="" min="1" value="100" max="400" step="1" id="grosor"
+                    <input type="range" name="" min="1" value="10" max="200" step="1" id="grosor"
                         oninput="grosor = document.getElementById('grosor').value, document.getElementById('cartelGrosor').innerHTML = grosor">
-                    <p id="cartelGrosor">100</p>
+                    <p id="cartelGrosor">10</p>
                 </div>
 
                 <div class="rango">
                     <p>opprin</p>
-                    <input type="range" name="" min="0" value="0.3" max="1" step="0.01" id="opacidadPrincipal"
+                    <input type="range" name="" min="0" value="1" max="1" step="0.01" id="opacidadPrincipal"
                         oninput="opacidadPrincipal = document.getElementById('opacidadPrincipal').value,
                                                                                                          document.getElementById('cartelOpacPrin').innerHTML = opacidadPrincipal">
-                    <p id="cartelOpacPrin">0.3</p>
+                    <p id="cartelOpacPrin">1</p>
                 </div>
 
                 <div class="rango">
@@ -132,19 +122,11 @@
                         <p>indice trazo</p>
                         <canvas id="trazo1" width="200" height="100"></canvas>
                     </button>
-                    <button type="button" class="trazo">
-                        <p>indice trazo</p>
-                        <canvas id="trazo2" width="200" height="100"></canvas>
-                    </button>
-                    <button type="button" class="trazo">
-                        <p>indice trazo</p>
-                        <canvas id="trazo3" width="200" height="100" ></canvas>
-                    </button>
                 </div>
             </div>
         </div>
 
-        <canvas height="720" width="1280" id="canvasPrincipal">
+        <canvas id="canvasPrincipal">
         </canvas>
 
         <div class="seccionDerecha">

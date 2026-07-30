@@ -72,9 +72,9 @@ body {
 .seccionDerecha {
     height: calc(80vh - var(--padding));
     background-color: lightblue;
-    right: var(-);
+    right: var(--padding);
     height: calc(100% - var(--padding));
-    width: 40vh;
+    width: 35vh;
     position: absolute;
     right: calc(var(--padding) / 2);
     top: 50%;
@@ -286,7 +286,7 @@ select {
     height: 70vh;
     position: absolute;
     top: 16.6vh;
-    right: 42.5vh;
+    right: 37.5vh;
     z-index: 1000;
 
     display: flex;
@@ -413,4 +413,9 @@ select {
     width: 100%;
     height: 84.3%;
     background-color: var(--fondoCanvas);
+}
+
+.barraHerramientas button{
+    height: 70%;
+    padding-inline: 1.5vh;
 }

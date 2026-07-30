@@ -7,16 +7,17 @@ function hexToRgb(hex) {
     return { r, g, b }
 }
 const canvasDom = document.getElementById("canvasPrincipal");
+canvasDom.width = lienzoPrincipal.confCapas.anchoCanvas
+canvasDom.height = lienzoPrincipal.confCapas.altoCanvas
 const canvas = new lienzoHtml(canvasDom.width, canvasDom.height, canvasDom)
 
 
-canvasDom.width = lienzoPrincipal.confCapas.anchoCanvas
-canvasDom.height = lienzoPrincipal.confCapas.altoCanvas
+
 
 const canvasInfo = canvasDom.getBoundingClientRect();
 
-configuracion.configurarEsteticaCanvas(canvasDom)
-configuracion.agregarCapaBase()
+
+configuracion.configuracionesBase(canvasDom);
 
 function revertirTrazo() {
     if (lienzoPrincipal.capaActiva.historial.historialTrazos.length > 0) {
@@ -34,57 +35,8 @@ function recuperarTrazo() {
     }
 }
 
-function listarHerramientas() {
-    const pinceles = Object.keys(absoluteArt.dibujo.pinceles)
-    for (const pincel of pinceles) {
-        document.getElementById("pinceles").insertAdjacentHTML('beforeend', `<option value="${pincel}" class="pincel">${pincel}</option>`);
-    }
-
-    const figuras = Object.keys(absoluteArt.dibujo.figuras)
-    for (const figura of figuras) {
-        document.getElementById("figuras").insertAdjacentHTML('beforeend', `<option value="${figura}" class="figura">${figura}</option>`);
-    }
-
-    /*
-    const herramientas = Object.keys(absoluteArt.dibujo.herramientas)
-    for (const herramienta of herramientas) {
-        document.getElementById("herramientas").insertAdjacentHTML('beforeend', `<option value="${herramienta}" class="herramienta">${herramienta}</option>`);
-    }
-*/
-
-}
-
-listarHerramientas();
-let tipoHerramienta = 'dibujo';
-let categoriaHerramienta = 'figuras';
-let herramienta = 'lineaBrusca';
-let colorPrincipal = { r: 0, g: 0, b: 0 };
-let colorSecundario = { r: 0, g: 0, b: 0 };
-let grosor = 100;
-let opacidadPrincipal = 0.3;
-let opacidadSecundaria = 1;
-let recorrido = [];
-
-const listaCapas = document.getElementById('listaCapas');
-
 let capaActual = lienzoPrincipal.capas
-
-function obtenerParametros() {
-    return {
-        colorPrincipal: colorPrincipal,
-        opacidadPrincipal: opacidadPrincipal,
-        grosorLinea: grosor,
-
-        colorSecundario: colorSecundario,
-        opacidadSecundaria: opacidadSecundaria,
-        contexto: {
-            tipoHerramienta: tipoHerramienta,
-            categoriaHerramienta: categoriaHerramienta,
-            herramienta: herramienta,
-            recorrido,
-        }
-    }
-}
+const listaCapas = document.getElementById('listaCapas');
 
 function cambiarOpacidadCapa() {
     capaActual.opacidad = Number(document.getElementById('capaOpacidad').value)
@@ -297,8 +249,8 @@ function eliminarCapaActual() {
         }
         capaActual = lienzoPrincipal.capas
         seleccionarCapa(capaActual.id, capaActual.tipoCapa)
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-        lienzoPrincipal.capas.renderizar(ctx);
+        canvas.limpiar()
+        lienzoPrincipal.capas.renderizar(canvas);
         sincronizarCapaCanvasReal(capaActual);
     }
 
@@ -399,40 +351,67 @@ function cambiarCapaGrupo() {
     agregarContenidoGrupo(lienzoPrincipal.capas)
     seleccionarCapa(capaActual.id, capaActual.tipoCapa)
 }
-let parametros = obtenerParametros();
-let clickeando = false;
 
+function listarHerramientas() {
+    for (const herramienta of pintor.listaHerramientas) {
+        document.getElementById("herramientas").insertAdjacentHTML('beforeend', `<option value="${herramienta.nombre}" >${herramienta.nombre}</option>`);
+    }
+}
+listarHerramientas();
+
+let colorPrincipal = { r: 0, g: 0, b: 0, }
+let colorSecundario = { r: 0, g: 0, b: 0, }
+let opacidadPrincipal = 1;
+let opacidadSecundaria = 1;
+let grosor = 10;
+let nombreHerramienta = 'lineaSimple';
+
+function obtenerColores() {
+    const rgba = [{
+        r: hexToRgb(document.getElementById('colorPrincipal').value).r,
+        g: hexToRgb(document.getElementById('colorPrincipal').value).g,
+        b: hexToRgb(document.getElementById('colorPrincipal').value).b,
+        a: document.getElementById('opacidadPrincipal').value
+    }, {
+        r: hexToRgb(document.getElementById('colorSecundario').value).r,
+        g: hexToRgb(document.getElementById('colorSecundario').value).g,
+        b: hexToRgb(document.getElementById('colorSecundario').value).b,
+        a: document.getElementById('opacidadSecundaria').value
+    }];
+    return rgba;
+}
+
+function obtenerTrazoActual(cordInicial) {
+    const trazoGuardar = new trazo({
+        trayectos: [],
+        puntoInicial: cordInicial,
+        rgba: obtenerColores(),
+        grosor: grosor,
+        herramienta: nombreHerramienta,
+        relacionAnchoAlto: undefined
+    })
+    return trazoGuardar;
+}
+
+let clickeando = false;
 canvasDom.addEventListener('mousedown', (e) => {
     clickeando = true;
-    recorrido = []; // adaptarCordCanvas(cordX,cordY,canvas)
-    recorrido.push(utiles.adaptarCordCanvas(e.clientX, e.clientY, canvasDom))
-    parametros = obtenerParametros();
-    utiles.pintarTrazo(parametros, canvas)
+
+    const cordenadaActual = utiles.adaptarCordCanvas(e.clientX, e.clientY, canvasDom)
+    lienzoPrincipal.inicioClick({ cordenada: cordenadaActual, lienzoReal: canvas, parametrosTrazo: obtenerTrazoActual(cordenadaActual) })
 });
 
 canvasDom.addEventListener('mousemove', (e) => {
-    if (clickeando) {
-        parametros = obtenerParametros();
-        recorrido.push(utiles.adaptarCordCanvas(e.clientX, e.clientY, canvasDom))
+    if (!clickeando) return
 
-        canvas.limpiar()
-        lienzoPrincipal.capas.renderizarHasta(canvas, lienzoPrincipal.capaActiva.id)
-
-        utiles.pintarTrazo(parametros, canvas)
-
-        lienzoPrincipal.capas.renderizarDesde(canvas, lienzoPrincipal.capaActiva.id)
-    }
+    const cordenadaActual = utiles.adaptarCordCanvas(e.clientX, e.clientY, canvasDom)
+    lienzoPrincipal.arrastreClick({ cordenada: cordenadaActual, lienzoReal: canvas })
 });
 
 canvasDom.addEventListener('mouseup', (e) => {
     clickeando = false;
-    canvas.limpiar()
+    const cordenadaActual = utiles.adaptarCordCanvas(e.clientX, e.clientY, canvasDom)
 
-    recorrido.push(utiles.adaptarCordCanvas(e.clientX, e.clientY, canvasDom))
-    parametros = obtenerParametros();
-
-    lienzoPrincipal.capaActiva.guardarTrazo(parametros);
-    lienzoPrincipal.capas.renderizar(canvas);
-
+    lienzoPrincipal.finClick({ cordenada: cordenadaActual, lienzoReal: canvas })
     sincronizarCapaCanvasReal(capaActual);
 });
