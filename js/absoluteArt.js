@@ -5,8 +5,14 @@ class lienzoBase {
         this.canvas = undefined
     }
 
+    recorrerBuffer({ buffer }) {
+    }
+
     pegarLienzo(lienzo, x, y) { // pegar en ESTE lienzo
+        ctx.save();
+        ctxReal.globalAlpha = trazo.rgba[0].a;
         console.log("funcion pegarLienzo no hecha")
+        ctx.restore()
     }
 
     redimenzionar(u, r, d, l) { // como en el cubo rubik 3x3 ,Up Right Down Left, en sentido horario, es aumento o decenso para que no crezca o se achique siempre perdiendo contenido del mismo lado
@@ -35,20 +41,29 @@ class lienzoBase {
 
 }
 class lienzoHtml extends lienzoBase {
-    constructor(largo, alto, canvas) {
+    constructor({ largo, alto, canvas, muchaLectura }) {
+        console.log("canvas impresos")
         super(largo, alto)
         if (canvas) {
             this.canvas = canvas;
         } else {
             this.canvas = document.createElement('canvas')
         }
-        this.ctx = this.canvas.getContext('2d')
+        if (!muchaLectura) {
+            this.ctx = this.canvas.getContext('2d')
+        } else {
+            console.log(" si lo hice we")
+            this.ctx = this.canvas.getContext('2d', { willReadFrequently: true })
+        }
         this.canvas.width = this.largo
         this.canvas.height = this.alto
     }
 
-    pegarLienzo({ lienzo, x, y }) { // pegar en ESTE lienzo
+    pegarLienzo({ lienzo, x, y, alpha }) { // pegar en ESTE lienzo
+        this.ctx.save();
+        this.ctx.globalAlpha = alpha;
         this.ctx.drawImage(lienzo.canvas, x, y)
+        this.ctx.restore()
     }
     redimenzionar({ u, r, d, l }) {
         const canvasProvisional = document.createElement('canvas')
@@ -88,7 +103,6 @@ class lienzoHtml extends lienzoBase {
         }
     }
     limpiarRectangulo({ x, y, largo, alto }) {
-        console.log("pq no se borrooooooo")
         this.ctx.clearRect(x, y, largo, alto);
     }
     pintarRectangulo({ x, y, largo, alto, r, g, b, a }) {
@@ -140,10 +154,39 @@ class lienzoHtml extends lienzoBase {
             a: pixel[3]
         };
     }
+
+    obtenerSeccionBuffer({ alto, largo, x, y }) {
+        return this.ctx.getImageData(x, y, largo, alto)
+    }
+    insertarSeccionBuffer({ buffer, x, y }) {
+        this.ctx.putImageData(buffer, x, y);
+    }
+
+    cambiarCanalSeccion({ seccion, condicion, cambios }) {
+
+        const imageData = this.obtenerSeccionBuffer(seccion)
+        const buffer = imageData.data
+        // this.recorrerBuffer(buffer , condicion , cambios)
+        for (let i = 0; i < buffer.length; i += 4) {
+            const r = buffer[i];
+            const g = buffer[i + 1];
+            const b = buffer[i + 2];
+            const a = buffer[i + 3];
+            if (condicion({ r, g, b, a })) {
+                const nuevoPx = cambios({ r, g, b, a })
+                buffer[i] = nuevoPx.r;
+                buffer[i + 1] = nuevoPx.g;
+                buffer[i + 2] = nuevoPx.b;
+                buffer[i + 3] = nuevoPx.a;
+            }
+        }
+
+        this.insertarSeccionBuffer({ buffer: imageData, x: seccion.x, y: seccion.y });
+    }
 }
 class capaBase {
     constructor(capaPadre, idCapa, anchoCanvas, altoCanvas) {
-        this.lienzo = lienzo.obtener(anchoCanvas, altoCanvas)
+        this.lienzo = lienzo.obtener({ largo: anchoCanvas, alto: altoCanvas })
         this.id = idCapa
         this.capaPadre = capaPadre;
     }
@@ -435,7 +478,7 @@ class historial {
         }
     }
     guardarCaptura() {
-        const canvasTrucho = lienzo.obtener(this.lienzo.largo, this.lienzo.alto)
+        const canvasTrucho = lienzo.obtener({ largo: this.lienzo.largo, alto: this.lienzo.alto })
         canvasTrucho.pegarLienzo({ lienzo: this.lienzo, x: 0, y: 0 })
         this.historialCapturas.push({ captura: canvasTrucho, indice: this.historialTrazos.length })
 
@@ -489,7 +532,7 @@ class historial {
         const clonHistorial = []
         for (let i = 0; i < this.historialCapturas.length; i++) {
             const capt = this.historialCapturas[i]
-            const canvasClon = lienzo.obtener(capt.captura.largo, capt.captura.alto);
+            const canvasClon = lienzo.obtener({ largo: capt.captura.largo, alto: capt.captura.alto });
             canvasClon.pegarLienzo({ lienzo: capt.captura, y: 0, x: 0 })
 
             clonHistorial.push({ indice: capt.indice, captura: canvasClon })
@@ -628,7 +671,8 @@ class trazo {
     }
     remplazarUltimaCordenada(cordenada) {
         if (this.trayectos[this.trayectos.length - 1].length > 0) {
-            this.trayectos[this.trayectos.length - 1][this.trayectos[this.trayectos.length - 1].length - 1] = this.obtenerCordenadaRelativa(cordenada)
+            this.trayectos[this.trayectos.length - 1].pop()
+            this.trayectos[this.trayectos.length - 1].push(this.obtenerCordenadaRelativa(cordenada))
         } else {
             this.agregarCordenada(cordenada)
         }
@@ -645,6 +689,10 @@ class herramientaDibujo extends herramienta {
     }
     trazoComplejo() {
         return false
+    }
+
+    trazoValido(trazo) {
+        return true;
     }
 }
 class figura extends herramientaDibujo {
@@ -711,11 +759,11 @@ class lineaSimple extends figura {
         return true
     }
 }
-
 class rectanguloSimple extends figura {
     constructor(nombre, categoria) {
         super(nombre, categoria)
     }
+
     usar({ lienzo, trazo }) { // ({ x1, y1, x2, y2, grosor, r, g, b, a })
         if (!this.trazoValido(trazo)) return
         const borde = trazo.cajaDelimitadora()
@@ -727,13 +775,108 @@ class rectanguloSimple extends figura {
         centro.y += trazo.grosor + trazo.puntoInicial.y;
         centro.largo -= trazo.grosor * 2;
         centro.alto -= trazo.grosor * 2;
-        Object.assign(centro, trazo.rgba[1]);
+        if (centro.largo > 0 && centro.alto > 0) {
+            Object.assign(centro, trazo.rgba[1]);
 
-        lienzo.pintarRectangulo(borde)
-        if (centro.largo > 0 && centro.alto  > 0) {
-            lienzo.limpiarRectangulo(centro)
+            borde.alto -= centro.alto + trazo.grosor
+            lienzo.pintarRectangulo(borde) // ariba
+
+            borde.y += centro.alto + trazo.grosor
+            lienzo.pintarRectangulo(borde) // abajo
+
+            borde.y -= centro.alto
+            borde.largo = trazo.grosor
+            borde.alto = centro.alto
+            lienzo.pintarRectangulo(borde) // izquerda
+
+            borde.x += centro.largo + trazo.grosor
+            lienzo.pintarRectangulo(borde) // derecha
+
             lienzo.pintarRectangulo(centro)
+        } else {
+            lienzo.pintarRectangulo({
+                x: borde.x,
+                y: borde.y,
+                largo: borde.largo,
+                alto: borde.alto,
+                r: trazo.rgba[0].r,
+                g: trazo.rgba[0].g,
+                b: trazo.rgba[0].b,
+                a: trazo.rgba[0].a
+            })
         }
+    }
+}
+class pincel extends herramientaDibujo {
+    constructor(nombre, categoria, trayectoMuyLargo) {
+        super(nombre, categoria)
+        this.trayectoMuyLargo = trayectoMuyLargo;
+    }
+    usar({ lienzo, lienzoIntermediario, trazo }) {
+
+    }
+    trazoComplejo(trazo) {
+        console.log()
+        if (trazo.trayectos[0].length > this.trayectoMuyLargo) return true
+
+        return false;
+    }
+
+    trazoEnProceso(trazo) {
+        return false
+    }
+
+    acomodarAlphaTrazo({ lienzo, trazo }) {
+        const seccionCambiar = trazo.cajaDelimitadora();
+        seccionCambiar.x += trazo.puntoInicial.x - trazo.grosor
+        seccionCambiar.y += trazo.puntoInicial.y - trazo.grosor
+        seccionCambiar.largo += trazo.grosor * 2
+        seccionCambiar.alto += trazo.grosor * 2
+
+        lienzo.cambiarCanalSeccion({
+            seccion: seccionCambiar,
+            condicion: ({ r, g, b, a }) => a !== 0,
+            cambios: ({ r, g, b, a }) => {
+                a = trazo.rgba[0].a * 255;
+                return { r, g, b, a }
+            },
+        })
+        lienzo.pegarLienzo({ lienzo: lienzo, x: 0, y: 0 })
+    }
+}
+class pincelSimpleCuadrado extends pincel {
+    constructor(nombre, categoria, trayectoMuyLargo) {
+        super(nombre, categoria, trayectoMuyLargo)
+    }
+
+    usar({ lienzo, lienzoIntermediario, trazo }) {
+        let lienzoUtilizar = undefined;
+        if (!this.utilizarLienzoIntermediario(trazo)) {
+            lienzoUtilizar = lienzo
+        } else {
+            lienzoUtilizar = lienzoIntermediario
+        }
+
+        for (const cord of trazo.trayectos[0]) {
+            lienzoUtilizar.pintarRectangulo({
+                x: cord.x + trazo.puntoInicial.x - trazo.grosor / 2,
+                y: cord.y + trazo.puntoInicial.y - trazo.grosor / 2,
+                largo: trazo.grosor,
+                alto: trazo.grosor,
+                r: trazo.rgba[0].r,
+                g: trazo.rgba[0].g,
+                b: trazo.rgba[0].b,
+                a: 1,
+            })
+        }
+
+        if (this.utilizarLienzoIntermediario(trazo)) lienzo.pegarLienzo({ lienzo: lienzoIntermediario, x: 0, y: 0, alpha: trazo.rgba[0].a })
+    }
+
+    utilizarLienzoIntermediario(trazo) {
+        if (trazo.trayectos[0].length === 1 || trazo.rgba[0].a === 1) return false
+        console.log("mierda")
+        return true
     }
 }
 
@@ -743,19 +886,17 @@ const pintor = {
     listaHerramientas: [],
     listaCategorias: [],
 
-    dibujar(lienzoDibujar, trazo) {
-        /*
+    dibujar(lienzoDibujar, trazo, estadoTrazo) {
         if (!this.lienzoIntermediario) {
-            this.lienzoIntermediario = lienzo.obtener(lienzoDibujar.largo, lienzoDibujar.alto)
+            this.lienzoIntermediario = lienzo.obtener({ largo: lienzoDibujar.largo, alto: lienzoDibujar.alto, muchaLectura: true })
         } else if (this.lienzoIntermediario.largo !== lienzoDibujar.largo || this.lienzoIntermediario.alto !== lienzoDibujar.alto) {
             this.lienzoIntermediario.redimenzionar(lienzoDibujar.largo, lienzoDibujar.alto)
         }
-            */
         this.obtenerHerramienta(trazo.herramienta).usar({ lienzo: lienzoDibujar, trazo: trazo, lienzoIntermediario: this.lienzoIntermediario })
-        //this.lienzoIntermediario.redimenzionar(1, 1)
+        this.lienzoIntermediario.limpiar()
     },
     trazoComplejo(trazo) {
-        return this.obtenerHerramienta(trazo.herramienta).trazoComplejo();
+        return this.obtenerHerramienta(trazo.herramienta).trazoComplejo(trazo);
     },
     cargarCategorias() { // orden ordenado por dios
         const listaCategorias = [
@@ -777,6 +918,7 @@ const pintor = {
         this.listaHerramientas.push(
             this.agregarHerramienta((new lineaSimple('lineaSimple', this.obtenerCategoria('figuras')))),
             this.agregarHerramienta((new rectanguloSimple('rectanguloSimple', this.obtenerCategoria('figuras')))),
+            this.agregarHerramienta((new pincelSimpleCuadrado('pincelSimpleCuadrado', this.obtenerCategoria('sello'), 400))),
         )
     },
     agregarHerramienta(herramienta) {
@@ -823,8 +965,9 @@ const lienzoPrincipal = {
     trazoTemporal: undefined,
     trazoGuardar: undefined,
 
-    inicioClick({ cordenada, lienzoReal, parametrosTrazo }) {
+    lienzoPinceles: undefined,
 
+    inicioClick({ cordenada, lienzoReal, parametrosTrazo }) {
         if (this.trazoGuardar) {
             if (!pintor.obtenerHerramienta(this.trazoGuardar.herramienta).trazoEnProceso(this.trazoGuardar)) {
                 if (pintor.obtenerHerramienta(this.trazoGuardar.herramienta).trazoValido(this.trazoGuardar)) {
@@ -840,11 +983,14 @@ const lienzoPrincipal = {
     },
 
     arrastreClick({ cordenada, lienzoReal }) {
-
         lienzoReal.limpiar()
-        if (pintor.obtenerHerramienta(this.trazoGuardar.herramienta).perteneceCategoria(pintor.obtenerCategoria('pinceles'))) {
+        const herramientaActual = pintor.obtenerHerramienta(this.trazoGuardar.herramienta)
+        if (herramientaActual.perteneceCategoria(pintor.obtenerCategoria('pinceles'))) {
             this.trazoGuardar.agregarCordenada(cordenada)
-            this.renderizarTrazo({ lienzoReal: lienzoReal, trazo: this.trazoGuardar })
+            this.trazoTemporal.trayectos[0][0] = this.trazoGuardar.trayectos[0][this.trazoGuardar.trayectos[0].length - 1]
+
+            this.renderizarIntermedioPincel({ lienzoReal: lienzoReal, trazoTemporal: this.trazoTemporal, trazoReal: this.trazoGuardar })
+
         } else {
             if (this.trazoTemporal.trayectos[this.trazoTemporal.trayectos.length - 1].length > 1) {
                 this.trazoTemporal.remplazarUltimaCordenada(cordenada)
@@ -856,6 +1002,9 @@ const lienzoPrincipal = {
     },
 
     finClick({ cordenada, lienzoReal }) {
+        if (!this.trazoGuardar) return
+        if (this.lienzoPinceles) this.lienzoPinceles.limpiar()
+
         lienzoReal.limpiar()
         this.trazoGuardar.agregarCordenada(cordenada)
         this.renderizarTrazo({ lienzoReal: lienzoReal, trazo: this.trazoGuardar })
@@ -866,6 +1015,21 @@ const lienzoPrincipal = {
             }
             this.trazoGuardar = undefined;
         }
+    },
+
+    renderizarIntermedioPincel({ lienzoReal, trazoTemporal, trazoReal }) {
+        const herramienta = pintor.obtenerHerramienta(this.trazoGuardar.herramienta)
+        if (!this.lienzoPinceles) {
+            this.lienzoPinceles = lienzo.obtener({ largo: lienzoReal.largo, alto: lienzoReal.alto, muchaLectura: true })
+        } else if (this.lienzoPinceles.largo !== lienzoReal.largo || this.lienzoPinceles.alto !== lienzoReal.alto) {
+            this.lienzoPinceles.redimenzionar(lienzoReal.largo, lienzoReal.alto)
+        }
+
+        pintor.dibujar(this.lienzoPinceles, trazoTemporal)
+
+        this.capas.renderizarHasta(lienzoReal, this.capaActiva.id)
+        lienzoReal.pegarLienzo({ lienzo: this.lienzoPinceles, y: 0, x: 0, alpha: trazoTemporal.rgba[0].a })
+        this.capas.renderizarDesde(lienzoReal, this.capaActiva.id)
     },
 
     renderizarTrazo({ lienzoReal, trazo }) {
@@ -1038,8 +1202,9 @@ const utiles = {
     adaptarCordCanvas(cordX, cordY, canvas) {//usar para convertir la cordenada obtenida para que sea la cordenada real tocada del canvas
         const tamanio = this.medidaPixelesCanvas(canvas);
         const ubicacionClick = this.obtUbicClickElem(cordX, cordY, canvas);
-        return { x: ((ubicacionClick.x / tamanio.ancho) | 0) + 0.5, y: ((ubicacionClick.y / tamanio.alto) | 0) + 0.5 };
+        //return { x: ((ubicacionClick.x / tamanio.ancho) | 0) + 0.5, y: ((ubicacionClick.y / tamanio.alto) | 0) + 0.5 };
         //return { x: ((ubicacionClick.x / tamanio.ancho) ) , y: ((ubicacionClick.y / tamanio.alto))  };
+        return { x: (Math.ceil(ubicacionClick.x / tamanio.ancho)), y: (Math.ceil(ubicacionClick.y / tamanio.alto)) };
     },
     obtUbicClickElem(cordX, cordY, elemento) {
         const infoObjeto = { x: elemento.getBoundingClientRect().x, y: elemento.getBoundingClientRect().y };
@@ -1047,11 +1212,11 @@ const utiles = {
     },
 }
 const lienzo = {
-    contadorLienzos : 0,
-    obtener(largo, alto) { // faltan lienzos, por ahora solo el lienzoPlano pero si agregase react native faltaria ese tambien , todos deben tener las mismas funciones , porlomenos las qu ese usen al dibujar
+    contadorLienzos: 0,
+    obtener({ largo, alto, canvas, muchaLectura }) { // faltan lienzos, por ahora solo el lienzoPlano pero si agregase react native faltaria ese tambien , todos deben tener las mismas funciones , porlomenos las qu ese usen al dibujar
         this.contadorLienzos++;
         console.log(this.contadorLienzos)
-        return new lienzoHtml(largo, alto)
+        return new lienzoHtml({ largo, alto, canvas, muchaLectura })
     },
 }
 const configuracion = {

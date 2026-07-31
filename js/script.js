@@ -9,7 +9,7 @@ function hexToRgb(hex) {
 const canvasDom = document.getElementById("canvasPrincipal");
 canvasDom.width = lienzoPrincipal.confCapas.anchoCanvas
 canvasDom.height = lienzoPrincipal.confCapas.altoCanvas
-const canvas = new lienzoHtml(canvasDom.width, canvasDom.height, canvasDom)
+const canvas = new lienzoHtml({largo : canvasDom.width, alto : canvasDom.height, canvas :canvasDom})
 
 
 
@@ -371,12 +371,12 @@ function obtenerColores() {
         r: hexToRgb(document.getElementById('colorPrincipal').value).r,
         g: hexToRgb(document.getElementById('colorPrincipal').value).g,
         b: hexToRgb(document.getElementById('colorPrincipal').value).b,
-        a: document.getElementById('opacidadPrincipal').value
+        a: Number(document.getElementById('opacidadPrincipal').value)
     }, {
         r: hexToRgb(document.getElementById('colorSecundario').value).r,
         g: hexToRgb(document.getElementById('colorSecundario').value).g,
         b: hexToRgb(document.getElementById('colorSecundario').value).b,
-        a: document.getElementById('opacidadSecundaria').value
+        a: Number(document.getElementById('opacidadSecundaria').value)
     }];
     return rgba;
 }
@@ -386,15 +386,18 @@ function obtenerTrazoActual(cordInicial) {
         trayectos: [],
         puntoInicial: cordInicial,
         rgba: obtenerColores(),
-        grosor: grosor,
+        grosor: Number(grosor),
         herramienta: nombreHerramienta,
         relacionAnchoAlto: undefined
     })
     return trazoGuardar;
 }
 
+document.getElementById('cerrarConfCapa').click()
+
 let clickeando = false;
 canvasDom.addEventListener('mousedown', (e) => {
+    if (clickeando) return
     clickeando = true;
 
     const cordenadaActual = utiles.adaptarCordCanvas(e.clientX, e.clientY, canvasDom)
@@ -408,7 +411,7 @@ canvasDom.addEventListener('mousemove', (e) => {
     lienzoPrincipal.arrastreClick({ cordenada: cordenadaActual, lienzoReal: canvas })
 });
 
-canvasDom.addEventListener('mouseup', (e) => {
+canvasDom.addEventListener('mouseup', (e) => { // bug al hacer click derecho y izquierdo a la ves, entra sin tener un trazo generado y intenta meterse igual
     clickeando = false;
     const cordenadaActual = utiles.adaptarCordCanvas(e.clientX, e.clientY, canvasDom)
 
