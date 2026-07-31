@@ -8,3 +8,5 @@ el script.js es un controlador de absoluteArt momentaneo , pronto se reducira a 
 https://absoluteart.vercel.app/
 
 Estoy yendo bastante lento debido a que no hago vibe coding pq es un proyecto  mas que nada para aprender, mientras mas complejo mas aprendo , mientras mas gpt menos aprendo , necesito un punto medio de dudas tecnicas y nada mas
+
+Pueden haber commits raros debido a que en ocaciones me voy por 1 findesemana y no tengo laptop , por lo tanto debo usar la de mi papa si me la presta y no se si se pueden sincronizar los git de mi compu y la sulla, ademas de no querer hacerlo por miedo a perder las cosas
