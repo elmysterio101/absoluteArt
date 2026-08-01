@@ -42,7 +42,6 @@ class lienzoBase {
 }
 class lienzoHtml extends lienzoBase {
     constructor({ largo, alto, canvas, muchaLectura }) {
-        console.log("canvas impresos")
         super(largo, alto)
         if (canvas) {
             this.canvas = canvas;
@@ -109,13 +108,13 @@ class lienzoHtml extends lienzoBase {
         this.ctx.fillStyle = 'rgba(' + r + ' , ' + g + ' , ' + b + ' , ' + a + ')';
         this.ctx.fillRect(x, y, largo, alto)
     }
-    pintarElipse({ x1, y1, x2, y2, r, g, b, a, rotacion, inicio, fin }) {
+    pintarElipse({ x, y, largo, alto, r, g, b, a, rotacion, inicio, fin }) {
         this.ctx.fillStyle = 'rgba(' + r + ' , ' + g + ' , ' + b + ' , ' + a + ')';
-        let radioX = Math.abs(x2 - x1) / 2;
-        let radioY = Math.abs(y2 - y1) / 2;
+        let radioX = Math.abs(largo) / 2;
+        let radioY = Math.abs(alto) / 2;
 
-        let centroX = (x1 + x2) / 2;
-        let centroY = (y1 + y2) / 2;
+        let centroX = x + radioX;
+        let centroY = y + radioY;
         this.ctx.beginPath();
         this.ctx.ellipse(
             centroX,
@@ -128,13 +127,13 @@ class lienzoHtml extends lienzoBase {
         );
         this.ctx.fill();
     }
-    limpiarElipse({ x1, y1, x2, y2, rotacion, inicio, fin }) {
+    limpiarElipse({ x, y, largo, alto, rotacion, inicio, fin }) {
         this.ctx.globalCompositeOperation = "destination-out";
-        let radioX = Math.abs(x2 - x1) / 2;
-        let radioY = Math.abs(y2 - y1) / 2;
+        let radioX = Math.abs(largo) / 2;
+        let radioY = Math.abs(alto) / 2;
 
-        let centroX = Math.abs(x1 + x2) / 2;
-        let centroY = Math.abs(y1 + y2) / 2;
+        let centroX = x + radioX;
+        let centroY = y + radioY;
 
         this.ctx.beginPath();
         this.ctx.ellipse(
@@ -856,6 +855,11 @@ class pincel extends herramientaDibujo {
         })
         lienzo.pegarLienzo({ lienzo: lienzo, x: 0, y: 0 })
     }
+
+    utilizarLienzoIntermediario(trazo) {
+        if (trazo.trayectos[0].length === 1 || trazo.rgba[0].a === 1) return false
+        return true
+    }
 }
 class pincelSimpleCuadrado extends pincel {
     constructor(nombre, categoria, trayectoMuyLargo) {
@@ -892,6 +896,38 @@ class pincelSimpleCuadrado extends pincel {
         return true
     }
 }
+class pincelSimpleRedondo extends pincel {
+    constructor(nombre, categoria, trayectoMuyLargo) {
+        super(nombre, categoria, trayectoMuyLargo)
+    }
+
+    usar({ lienzo, lienzoIntermediario, trazo }) {
+        let lienzoUtilizar = undefined;
+        if (!this.utilizarLienzoIntermediario(trazo)) {
+            lienzoUtilizar = lienzo
+        } else {
+            lienzoUtilizar = lienzoIntermediario
+        }
+
+        for (const cord of trazo.trayectos[0]) {
+            lienzoUtilizar.pintarElipse({
+                x: cord.x + trazo.puntoInicial.x - trazo.grosor / 2,
+                y: cord.y + trazo.puntoInicial.y - trazo.grosor / 2,
+                largo: trazo.grosor,
+                alto: trazo.grosor,
+                r: trazo.rgba[0].r,
+                g: trazo.rgba[0].g,
+                b: trazo.rgba[0].b,
+                a: 1,
+                rotacion: 0,
+                inicio: 0,
+                fin: Math.PI * 2
+            })
+        }
+
+        if (this.utilizarLienzoIntermediario(trazo)) lienzo.pegarLienzo({ lienzo: lienzoIntermediario, x: 0, y: 0, alpha: trazo.rgba[0].a })
+    }
+}
 class elipseSimple extends figura {
     constructor(nombre, categoria) {
         super(nombre, categoria)
@@ -901,10 +937,10 @@ class elipseSimple extends figura {
         if (!this.trazoValido(trazo)) return
         const caja = trazo.cajaDelimitadora();
         lienzoIntermediario.pintarElipse({
-            x1: trazo.puntoInicial.x + caja.x,
-            y1: trazo.puntoInicial.y + caja.y,
-            x2: trazo.puntoInicial.x + caja.largo,
-            y2: trazo.puntoInicial.y + caja.alto,
+            x: trazo.puntoInicial.x + caja.x,
+            y: trazo.puntoInicial.y + caja.y,
+            largo: caja.largo,
+            alto: caja.alto,
             r: trazo.rgba[0].r,
             g: trazo.rgba[0].g,
             b: trazo.rgba[0].b,
@@ -914,22 +950,22 @@ class elipseSimple extends figura {
             fin: Math.PI * 2
         })
         if (caja.largo > trazo.grosor * 2 && caja.alto > trazo.grosor * 2) {
-            if (trazo.rgba[1].a < 1 ) {
+            if (trazo.rgba[1].a < 1) {
                 lienzoIntermediario.limpiarElipse({
-                    x1: trazo.puntoInicial.x + trazo.grosor + caja.x,
-                    y1: trazo.puntoInicial.y + trazo.grosor + caja.y,
-                    x2: trazo.puntoInicial.x + caja.largo - trazo.grosor,
-                    y2: trazo.puntoInicial.y + caja.alto - trazo.grosor,
+                    x: trazo.puntoInicial.x + trazo.grosor + caja.x,
+                    y: trazo.puntoInicial.y + trazo.grosor + caja.y,
+                    largo: caja.largo - trazo.grosor * 2,
+                    alto: caja.alto - trazo.grosor * 2,
                     rotacion: 0,
                     inicio: 0,
                     fin: Math.PI * 2
                 })
             }
             lienzoIntermediario.pintarElipse({
-                x1: trazo.puntoInicial.x + caja.x +trazo.grosor,
-                y1: trazo.puntoInicial.y + caja.y + trazo.grosor,
-                x2: trazo.puntoInicial.x + caja.largo - trazo.grosor,
-                y2: trazo.puntoInicial.y + caja.alto - trazo.grosor,
+                x: trazo.puntoInicial.x + trazo.grosor + caja.x,
+                y: trazo.puntoInicial.y + trazo.grosor + caja.y,
+                largo: caja.largo - trazo.grosor * 2,
+                alto: caja.alto - trazo.grosor * 2,
                 r: trazo.rgba[1].r,
                 g: trazo.rgba[1].g,
                 b: trazo.rgba[1].b,
@@ -981,6 +1017,7 @@ const pintor = {
             this.agregarHerramienta((new lineaSimple('lineaSimple', this.obtenerCategoria('figuras')))),
             this.agregarHerramienta((new rectanguloSimple('rectanguloSimple', this.obtenerCategoria('figuras')))),
             this.agregarHerramienta((new pincelSimpleCuadrado('pincelSimpleCuadrado', this.obtenerCategoria('sello'), 400))),
+            this.agregarHerramienta((new pincelSimpleRedondo('pincelSimpleRedondo', this.obtenerCategoria('sello'), 400))),
             this.agregarHerramienta((new elipseSimple('elipseSimple', this.obtenerCategoria('figuras')))),
         )
     },
