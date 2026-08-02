@@ -9,10 +9,7 @@ class lienzoBase {
     }
 
     pegarLienzo(lienzo, x, y) { // pegar en ESTE lienzo
-        ctx.save();
-        ctxReal.globalAlpha = trazo.rgba[0].a;
         console.log("funcion pegarLienzo no hecha")
-        ctx.restore()
     }
 
     redimenzionar(u, r, d, l) { // como en el cubo rubik 3x3 ,Up Right Down Left, en sentido horario, es aumento o decenso para que no crezca o se achique siempre perdiendo contenido del mismo lado
@@ -51,7 +48,6 @@ class lienzoHtml extends lienzoBase {
         if (!muchaLectura) {
             this.ctx = this.canvas.getContext('2d')
         } else {
-            console.log(" si lo hice we")
             this.ctx = this.canvas.getContext('2d', { willReadFrequently: true })
         }
         this.canvas.width = this.largo
@@ -59,12 +55,15 @@ class lienzoHtml extends lienzoBase {
     }
 
     pegarLienzo({ lienzo, x, y, alpha }) { // pegar en ESTE lienzo
-        this.ctx.save();
-        this.ctx.globalAlpha = alpha;
+        if (alpha) {
+            this.ctx.save();
+            this.ctx.globalAlpha = alpha;
+        }
         this.ctx.drawImage(lienzo.canvas, x, y)
-        this.ctx.restore()
+
+        if (alpha) this.ctx.restore()
     }
-    redimenzionar({ u, r, d, l }) {
+    redimMantImg({ u, r, d, l }) {
         const canvasProvisional = document.createElement('canvas')
         canvasProvisional.width = this.largo;
         canvasProvisional.height = this.alto;
@@ -205,7 +204,9 @@ class capaBase {
     y = 0;
     visible = true;
     opacidad = 1;
-    renderizar() {
+    renderizar(lienzo) {
+        if (!this.visible) return
+        lienzo.pegarLienzo({ lienzo: this.lienzo, x: this.x, y: this.y, alpha: this.opacidad })
     }
 }
 class grupoCapas extends capaBase { // ctx cambiado
@@ -215,33 +216,29 @@ class grupoCapas extends capaBase { // ctx cambiado
     }
     tipoCapa = 'grupo';
     contenido = [];
-    renderizar(lienzo) {
-        if (this.visible) {
-            if (this.contenido.length > 0) {
-                for (const capa of this.contenido) {
-                    capa.renderizar(lienzo);
-                }
-            }
-        }
-    }
-    renderizarHasta(lienzo, idCapaLimite) {
+    preRenderizar() {
+        if (this.contenido.length === 0) return
+        this.lienzo.limpiar()
         for (const capa of this.contenido) {
-            capa.renderizar(lienzo);
-            if (capa.id === idCapaLimite) {
-                return;
-            }
+            capa.renderizar(this.lienzo);
         }
-    }
-    renderizarDesde(lienzo, idCapaLimite) {
-        let capaEncontrada = false;
-        for (const capa of this.contenido) {
-            if (capaEncontrada) {
-                capa.renderizar(lienzo);
 
-            }
-            if (capa.id === idCapaLimite) {
-                capaEncontrada = true;
-            }
+        let padreActual = this.capaPadre
+        let contador = 1;// borrar luego de probar rendimiento
+        while (padreActual) {
+            padreActual.preRenderizar()
+            padreActual = padreActual.capaPadre;
+            // borrar luego de probar rendimiento
+            console.log("contador padres renderizados : ", contador)
+            contador++;
+        }
+    }
+    renderizadoDividido({ capa, lienzoInicial, lienzoFinal }) {
+        let capaEncontrada = false;
+        for (const capaActual of this.contenido) {
+            if (!capaEncontrada) capaActual.renderizar(lienzoInicial);
+            if (capaEncontrada) capaActual.renderizar(lienzoFinal);
+            if (capaActual === capa) capaEncontrada = true
         }
     }
     buscarCapa(id) {
@@ -388,19 +385,18 @@ class capa extends capaBase {
     }
     tipoCapa = 'individual';
     editable = true;
+    opacidad = 1;
     guardarTrazo(trazo) {
+        if (!this.editable) return
         this.historial.guardarHistorial(trazo);
     }
     revertirTrazo() {
-        this.historial.revertirTrazo();
+        if (!this.editable) return
+        if (this.historial.revertirTrazo()) this.capaPadre.preRenderizar()
     }
     recuperarTrazo() {
-        this.historial.recuperarTrazo();
-    }
-    renderizar(lienzo) {
-        if (this.visible) {
-            lienzo.pegarLienzo({ lienzo: this.lienzo, x: this.x, y: this.y })
-        }
+        if (!this.editable) return
+        if (this.historial.recuperarTrazo()) this.capaPadre.preRenderizar()
     }
     clonar(capaPadre, idCopia) {
         const clonCapa = new capa(
@@ -443,25 +439,26 @@ class historial {
     historialCapturas = []; // {captura:, indice:}
 
     revertirTrazo() { // NO VEO RAZON PARA QUE NO FUNCIONE
-        if (this.historialTrazos.length > 0) {
-            this.lienzo.limpiar()
-            this.trazosRevertidos.push(this.historialTrazos[this.historialTrazos.length - 1])
-            if (this.historialCapturas.length > 0) {
-                if (this.historialCapturas[this.historialCapturas.length - 1].indice > this.historialTrazos.length - 1) {
-                    this.historialCapturas.pop();
-                }
+        if (this.historialTrazos.length === 0) return false
+        this.lienzo.limpiar()
+        this.trazosRevertidos.push(this.historialTrazos[this.historialTrazos.length - 1])
+        if (this.historialCapturas.length > 0) {
+            if (this.historialCapturas[this.historialCapturas.length - 1].indice > this.historialTrazos.length - 1) {
+                this.historialCapturas.pop();
+
             }
-            this.historialTrazos.pop()
-            this.pintarHistorial(this.lienzo);
         }
+        this.historialTrazos.pop()
+        this.pintarHistorial(this.lienzo);
+        return true
+
     }
     recuperarTrazo() {
-        if (this.trazosRevertidos.length > 0) {
-            this.historialTrazos.push(this.trazosRevertidos[this.trazosRevertidos.length - 1])
-            this.trazosRevertidos.pop();
-            const ultTrazo = this.historialTrazos[this.historialTrazos.length - 1];
-            pintor.dibujar(this.lienzo, ultTrazo)
-        }
+        if (this.trazosRevertidos.length === 0) return false
+        this.historialTrazos.push(this.trazosRevertidos[this.trazosRevertidos.length - 1])
+        this.trazosRevertidos.pop();
+        pintor.dibujar(this.lienzo, this.historialTrazos[this.historialTrazos.length - 1])
+        return true
     }
     guardarHistorial(trazo) {
         this.guardarTrazo(trazo);
@@ -696,6 +693,7 @@ class herramientaDibujo extends herramienta {
     constructor(nombre, categoria) {
         super(nombre, categoria)
     }
+    alphaSolapable = false;
     usar({ lienzo, lienzoIntermediario, trazo }) {
     }
     trazoComplejo() {
@@ -824,11 +822,11 @@ class pincel extends herramientaDibujo {
         super(nombre, categoria)
         this.trayectoMuyLargo = trayectoMuyLargo;
     }
+    alphaSolapable = true;
     usar({ lienzo, lienzoIntermediario, trazo }) {
 
     }
     trazoComplejo(trazo) {
-        console.log()
         if (trazo.trayectos[0].length > this.trayectoMuyLargo) return true
 
         return false;
@@ -892,7 +890,6 @@ class pincelSimpleCuadrado extends pincel {
 
     utilizarLienzoIntermediario(trazo) {
         if (trazo.trayectos[0].length === 1 || trazo.rgba[0].a === 1) return false
-        console.log("mierda")
         return true
     }
 }
@@ -987,10 +984,15 @@ const pintor = {
     dibujar(lienzoDibujar, trazo, estadoTrazo) {
         if (!this.lienzoIntermediario) {
             this.lienzoIntermediario = lienzo.obtener({ largo: lienzoDibujar.largo, alto: lienzoDibujar.alto, muchaLectura: true })
-        } else if (this.lienzoIntermediario.largo !== lienzoDibujar.largo || this.lienzoIntermediario.alto !== lienzoDibujar.alto) {
+        } else if ( this.lienzoIntermediario.largo !== lienzoDibujar.largo ||
+                    this.lienzoIntermediario.alto !== lienzoDibujar.alto) {
             this.lienzoIntermediario.redimenzionar(lienzoDibujar.largo, lienzoDibujar.alto)
         }
-        this.obtenerHerramienta(trazo.herramienta).usar({ lienzo: lienzoDibujar, trazo: trazo, lienzoIntermediario: this.lienzoIntermediario })
+        this.obtenerHerramienta(trazo.herramienta).usar({
+            lienzo: lienzoDibujar,
+            trazo: trazo,
+            lienzoIntermediario: this.lienzoIntermediario
+        })
         this.lienzoIntermediario.limpiar()
     },
     trazoComplejo(trazo) {
@@ -1046,16 +1048,16 @@ const pintor = {
     },
 }
 
-const lienzoPrincipal = {
+const mesaTrabajo = {
     confCapas: {
         frecuenciaCapturas: 10,
         trayectoMuyLargo: 1000,
         limiteCapturasHistorial: 5,
-        altoCanvas: 720,
-        anchoCanvas: 1280
-    }, //no de capa
-    conteoCapas: 0, // control de Id de capas
-    conteoGrupoCapas: 0, // control de Id de capas
+        altoCanvas: 144,
+        anchoCanvas: 256
+    },
+    conteoCapas: 0,
+    conteoGrupoCapas: 0,
     capas: {},
     capasIndividualesVivas: [],
     capasGrupoVivas: [],
@@ -1065,31 +1067,38 @@ const lienzoPrincipal = {
     trazoTemporal: undefined,
     trazoGuardar: undefined,
 
-    lienzoPinceles: undefined,
+    lienzoPincel: undefined, // por tema de exceso de procesamiento de puntos , pa optimizarlo basicamente, como una presa de agua
+    lienzoPrevio: undefined, //lienzoinicial
+    lienzoPosterior: undefined, //lienzoFinal
+
+    herramientaActiva: undefined,
 
     inicioClick({ cordenada, lienzoReal, parametrosTrazo }) {
-        if (this.trazoGuardar) {
-            if (!pintor.obtenerHerramienta(this.trazoGuardar.herramienta).trazoEnProceso(this.trazoGuardar)) {
-                if (pintor.obtenerHerramienta(this.trazoGuardar.herramienta).trazoValido(this.trazoGuardar)) {
+        if (this.trazoGuardar)
+            if (!this.herramientaActiva.trazoEnProceso(this.trazoGuardar))
+                if (this.herramientaActiva.trazoValido(this.trazoGuardar))
                     this.trazoGuardar = undefined;
-                }
-            }
-        }
-        if (!this.trazoGuardar) {
-            this.trazoGuardar = new trazo(parametrosTrazo)
-        }
+
+        if (!this.trazoGuardar) this.trazoGuardar = new trazo(parametrosTrazo)
+
+        this.herramientaActiva = pintor.obtenerHerramienta(this.trazoGuardar.herramienta);
+
+        this.prepararLienzosSanduich()
         this.trazoGuardar.agregarTrazo(cordenada)
         this.trazoTemporal = this.trazoGuardar.clonar()
     },
 
     arrastreClick({ cordenada, lienzoReal }) {
         lienzoReal.limpiar()
-        const herramientaActual = pintor.obtenerHerramienta(this.trazoGuardar.herramienta)
-        if (herramientaActual.perteneceCategoria(pintor.obtenerCategoria('pinceles'))) {
+        if (this.herramientaActiva.perteneceCategoria(pintor.obtenerCategoria('pinceles'))) {
             this.trazoGuardar.agregarCordenada(cordenada)
             this.trazoTemporal.trayectos[0][0] = this.trazoGuardar.trayectos[0][this.trazoGuardar.trayectos[0].length - 1]
 
-            this.renderizarIntermedioPincel({ lienzoReal: lienzoReal, trazoTemporal: this.trazoTemporal, trazoReal: this.trazoGuardar })
+            this.renderizarIntermedioPincel({
+                lienzoReal: lienzoReal,
+                trazoTemporal: this.trazoTemporal,
+                trazoReal: this.trazoGuardar
+            })
 
         } else {
             if (this.trazoTemporal.trayectos[this.trazoTemporal.trayectos.length - 1].length > 1) {
@@ -1103,39 +1112,62 @@ const lienzoPrincipal = {
 
     finClick({ cordenada, lienzoReal }) {
         if (!this.trazoGuardar) return
-        if (this.lienzoPinceles) this.lienzoPinceles.limpiar()
+        if (this.lienzoPincel) this.lienzoPincel.limpiar()
 
         lienzoReal.limpiar()
         this.trazoGuardar.agregarCordenada(cordenada)
         this.renderizarTrazo({ lienzoReal: lienzoReal, trazo: this.trazoGuardar })
 
-        if (!pintor.obtenerHerramienta(this.trazoGuardar.herramienta).trazoEnProceso(this.trazoGuardar)) {
-            if (pintor.obtenerHerramienta(this.trazoGuardar.herramienta).trazoValido(this.trazoGuardar)) {
-                this.capaActiva.guardarTrazo(this.trazoGuardar)
-            }
+        if (!this.herramientaActiva.trazoEnProceso(this.trazoGuardar)) {
+            if (this.herramientaActiva.trazoValido(this.trazoGuardar)) this.guardarTrazo();
             this.trazoGuardar = undefined;
         }
     },
 
     renderizarIntermedioPincel({ lienzoReal, trazoTemporal, trazoReal }) {
         const herramienta = pintor.obtenerHerramienta(this.trazoGuardar.herramienta)
-        if (!this.lienzoPinceles) {
-            this.lienzoPinceles = lienzo.obtener({ largo: lienzoReal.largo, alto: lienzoReal.alto, muchaLectura: true })
-        } else if (this.lienzoPinceles.largo !== lienzoReal.largo || this.lienzoPinceles.alto !== lienzoReal.alto) {
-            this.lienzoPinceles.redimenzionar(lienzoReal.largo, lienzoReal.alto)
+        if (!this.lienzoPincel) {
+            this.lienzoPincel = lienzo.obtener({ largo: lienzoReal.largo, alto: lienzoReal.alto, muchaLectura: true })
+        } else if (this.lienzoPincel.largo !== lienzoReal.largo || this.lienzoPincel.alto !== lienzoReal.alto) {
+            this.lienzoPincel.redimenzionar(lienzoReal.largo, lienzoReal.alto)
         }
 
-        pintor.dibujar(this.lienzoPinceles, trazoTemporal)
+        pintor.dibujar(this.lienzoPincel, trazoTemporal)
 
-        this.capas.renderizarHasta(lienzoReal, this.capaActiva.id)
-        lienzoReal.pegarLienzo({ lienzo: this.lienzoPinceles, y: 0, x: 0, alpha: trazoTemporal.rgba[0].a })
-        this.capas.renderizarDesde(lienzoReal, this.capaActiva.id)
+        lienzoReal.pegarLienzo({ lienzo: this.lienzoPrevio, x: 0, y: 0 })
+        lienzoReal.pegarLienzo({ lienzo: this.lienzoPincel, y: 0, x: 0, alpha: trazoTemporal.rgba[0].a })
+        lienzoReal.pegarLienzo({ lienzo: this.lienzoPosterior, y: 0, x: 0 })
     },
-
     renderizarTrazo({ lienzoReal, trazo }) {
-        this.capas.renderizarHasta(lienzoReal, this.capaActiva.id)
+        lienzoReal.pegarLienzo({ lienzo: this.lienzoPrevio, x: 0, y: 0 })
         pintor.dibujar(lienzoReal, trazo)
-        this.capas.renderizarDesde(lienzoReal, this.capaActiva.id)
+        lienzoReal.pegarLienzo({ lienzo: this.lienzoPosterior, y: 0, x: 0 })
+    },
+    prepararLienzosSanduich() {
+        this.capaActiva.capaPadre.preRenderizar()
+        if (!this.lienzoPosterior || !this.lienzoPrevio) {
+            this.lienzoPosterior = lienzo.obtener({
+                largo: this.confCapas.anchoCanvas,
+                alto: this.confCapas.altoCanvas
+            })
+            this.lienzoPrevio = lienzo.obtener({
+                largo: this.confCapas.anchoCanvas,
+                alto: this.confCapas.altoCanvas
+            })
+        } else if (this.lienzoPosterior.largo !== this.confCapas.anchoCanvas ||
+            this.lienzoPrevio.largo !== this.confCapas.anchoCanvas ||
+            this.lienzoPosterior.alto !== this.confCapas.altoCanvas ||
+            this.lienzoPrevio.alto !== this.confCapas.altoCanvas) {
+            this.lienzoPosterior.redimenzionar(this.confCapas.anchoCanvas, this.confCapas.altoCanva)
+            this.lienzoPrevio.redimenzionar(this.confCapas.anchoCanvas, this.confCapas.altoCanva)
+        }
+        this.lienzoPrevio.limpiar()
+        this.lienzoPosterior.limpiar()
+        this.capas.renderizadoDividido({
+            capa: this.capaActiva,
+            lienzoInicial: this.lienzoPrevio,
+            lienzoFinal: this.lienzoPosterior
+        })
     },
     clonarCapa(carpeta, capa) { //id carpeta es el padre, capa es la carpeta a clonar
         if (carpeta.tipoCapa === 'grupo') {
@@ -1239,6 +1271,38 @@ const lienzoPrincipal = {
         }
 
     },
+
+    revertirTrazo() {
+        this.capaActiva.revertirTrazo()
+    },
+    recuperarTrazo() {
+        this.capaActiva.recuperarTrazo()
+    },
+    renderizar(lienzo) {
+        this.capas.renderizar(lienzo)
+    },
+    guardarTrazo() {
+        this.capaActiva.guardarTrazo(this.trazoGuardar)
+
+    },
+    seleccionarCapa(id) {
+        for (const capa of this.capasIndividualesVivas) {
+            if (capa.id === id) {
+                this.capaActiva = capa
+                return capa
+            }
+        }
+        return false
+    },
+    seleccionarGrupoCapas(id) {
+        for (const capa of this.capasGrupoVivas) {
+            if (capa.id === id) {
+                this.capaActiva = capa
+                return capa
+            }
+        }
+        return false
+    }
 }
 
 const utiles = {
@@ -1315,7 +1379,7 @@ const lienzo = {
     contadorLienzos: 0,
     obtener({ largo, alto, canvas, muchaLectura }) { // faltan lienzos, por ahora solo el lienzoPlano pero si agregase react native faltaria ese tambien , todos deben tener las mismas funciones , porlomenos las qu ese usen al dibujar
         this.contadorLienzos++;
-        console.log(this.contadorLienzos)
+        console.log('numero de lienzos creados : ', this.contadorLienzos)
         return new lienzoHtml({ largo, alto, canvas, muchaLectura })
     },
 }
@@ -1333,7 +1397,7 @@ const configuracion = {
         canvas.style.imageRendering = 'crisp-edges'; // me lo tiro gemini , para el navegador de mierda pq lo difumina
     },
     agregarCapaBase() {
-        const lienzo = lienzoPrincipal;
+        const lienzo = mesaTrabajo;
         lienzo.capas = new grupoCapas(undefined, lienzo.conteoGrupoCapas, lienzo.confCapas.anchoCanvas, lienzo.confCapas.altoCanvas);
         lienzo.grupoCapasActiva = lienzo.capas;
         lienzo.capaActiva = new capa(lienzo.capas,
@@ -1357,7 +1421,7 @@ const configuracion = {
 }
 
 const absoluteArt = {
-    lienzoPrincipal,
+    mesaTrabajo,
     lienzo,
     utiles,
     pintor,

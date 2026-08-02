@@ -7,9 +7,9 @@ function hexToRgb(hex) {
     return { r, g, b }
 }
 const canvasDom = document.getElementById("canvasPrincipal");
-canvasDom.width = lienzoPrincipal.confCapas.anchoCanvas
-canvasDom.height = lienzoPrincipal.confCapas.altoCanvas
-const canvas = new lienzoHtml({largo : canvasDom.width, alto : canvasDom.height, canvas :canvasDom})
+canvasDom.width = mesaTrabajo.confCapas.anchoCanvas
+canvasDom.height = mesaTrabajo.confCapas.altoCanvas
+const canvas = new lienzoHtml({ largo: canvasDom.width, alto: canvasDom.height, canvas: canvasDom })
 
 
 
@@ -20,22 +20,18 @@ const canvasInfo = canvasDom.getBoundingClientRect();
 configuracion.configuracionesBase(canvasDom);
 
 function revertirTrazo() {
-    if (lienzoPrincipal.capaActiva.historial.historialTrazos.length > 0) {
-        canvas.limpiar()
-        lienzoPrincipal.capaActiva.historial.revertirTrazo()
-        lienzoPrincipal.capas.renderizar(canvas)
-    }
+    canvas.limpiar()
+    mesaTrabajo.revertirTrazo()
+    mesaTrabajo.renderizar(canvas)
 }
 
 function recuperarTrazo() {
-    if (lienzoPrincipal.capaActiva.historial.trazosRevertidos.length > 0) {
-        canvas.limpiar()
-        lienzoPrincipal.capaActiva.historial.recuperarTrazo()
-        lienzoPrincipal.capas.renderizar(canvas)
-    }
+    canvas.limpiar()
+    mesaTrabajo.recuperarTrazo()
+    mesaTrabajo.renderizar(canvas)
 }
 
-let capaActual = lienzoPrincipal.capas
+let capaActual = mesaTrabajo.capas
 const listaCapas = document.getElementById('listaCapas');
 
 function cambiarOpacidadCapa() {
@@ -59,9 +55,9 @@ function abrirConfiguracionCapa() {
     confCapa.style.display = "flex";
     let capa;
     if (tipoCapaActiva === 'grupo') {
-        capaActual = lienzoPrincipal.capas.buscarGrupoCapas(idGrupoActivo);
+        capaActual = mesaTrabajo.capas.buscarGrupoCapas(idGrupoActivo);
     } else {
-        capaActual = lienzoPrincipal.capas.buscarCapa(idCapaActiva);
+        capaActual = mesaTrabajo.capas.buscarCapa(idCapaActiva);
     }
 
     actualizarSelectorCapaPadre();
@@ -105,8 +101,8 @@ let tipoCapaActiva = 'grupo';
 function seleccionarCapa(id, tipo) {
     if (tipo === 'individual') {
         tipoCapaActiva = 'individual';
-        capaActual = lienzoPrincipal.capas.buscarCapa(id);
-        lienzoPrincipal.capaActiva = capaActual;
+        capaActual = mesaTrabajo.capas.buscarCapa(id);
+        mesaTrabajo.capaActiva = capaActual;
 
         idCapaActiva = id;
         const eliminar = document.querySelector('.activo')
@@ -118,8 +114,8 @@ function seleccionarCapa(id, tipo) {
         abrirCapasPadre(capaActual)
     } else if (tipo === 'grupo') {
         tipoCapaActiva = 'grupo';
-        capaActual = lienzoPrincipal.capas.buscarGrupoCapas(id);
-        lienzoPrincipal.grupoCapasActiva = capaActual;
+        capaActual = mesaTrabajo.capas.buscarGrupoCapas(id);
+        mesaTrabajo.grupoCapasActiva = capaActual;
         idGrupoActivo = id;
 
         const eliminar = document.querySelector('.activo')
@@ -149,8 +145,8 @@ function agregarCapaDom(tipo) {
     const ubic = document.getElementById('contenido' + idGrupoActivo);
 
     if (tipo === 'grupo') {
-        lienzoPrincipal.agregarGrupoCapas(idGrupoActivo);
-        const capa = lienzoPrincipal.grupoCapasActiva
+        mesaTrabajo.agregarGrupoCapas(idGrupoActivo);
+        const capa = mesaTrabajo.grupoCapasActiva
         idGrupoActivo = capa.id
 
         agregarCapaGrupo(ubic, capa);
@@ -158,8 +154,8 @@ function agregarCapaDom(tipo) {
 
     } else if (tipo === 'individual') {
 
-        lienzoPrincipal.agregarCapa(idGrupoActivo);
-        const capa = lienzoPrincipal.capaActiva
+        mesaTrabajo.agregarCapa(idGrupoActivo);
+        const capa = mesaTrabajo.capaActiva
         capaActiva = capa.id
 
         agregarCapaIndividual(ubic, capa)
@@ -241,16 +237,16 @@ function eliminarCapaActual() {
     }
     if (!capaDios) {
         if (capaActual.tipoCapa === 'grupo') {
-            lienzoPrincipal.eliminarGrupoCapas(capaActual.id);
+            mesaTrabajo.eliminarGrupoCapas(capaActual.id);
             document.getElementById('representacionGrupo' + capaActual.id).remove()
         } else {
-            lienzoPrincipal.eliminarCapa(capaActual.id);
+            mesaTrabajo.eliminarCapa(capaActual.id);
             document.getElementById('representacionCapa' + capaActual.id).remove()
         }
-        capaActual = lienzoPrincipal.capas
+        capaActual = mesaTrabajo.capas
         seleccionarCapa(capaActual.id, capaActual.tipoCapa)
         canvas.limpiar()
-        lienzoPrincipal.capas.renderizar(canvas);
+        mesaTrabajo.capas.renderizar(canvas);
         sincronizarCapaCanvasReal(capaActual);
     }
 
@@ -285,9 +281,9 @@ function moverCapaLista(capa, movimiento) {
 
 function duplicarCapa() {
     if (capaActual.capaPadre) {
-        lienzoPrincipal.clonarCapa(capaActual.capaPadre, capaActual)
+        mesaTrabajo.clonarCapa(capaActual.capaPadre, capaActual)
     }
-    agregarContenidoGrupo(lienzoPrincipal.capas)
+    agregarContenidoGrupo(mesaTrabajo.capas)
     seleccionarCapa(capaActual.id, capaActual.tipoCapa)
 }
 
@@ -297,7 +293,7 @@ function actualizarSelectorCapaPadre() {
         borrar.remove();
     }
 
-    for (const capa of lienzoPrincipal.capasGrupoVivas) {
+    for (const capa of mesaTrabajo.capasGrupoVivas) {
         if (capaActual !== capa) {
             let capaHijo = true;
             if (capaActual.tipoCapa === 'grupo') {
@@ -324,7 +320,7 @@ function actualizarSelectorCapaPadre() {
         }
     }
 
-    const capaDios = absoluteArt.lienzoPrincipal.capas;
+    const capaDios = absoluteArt.mesaTrabajo.capas;
     if (capaActual !== capaDios) {
         if (capaActual.capaPadre === capaDios) {
             select.insertAdjacentHTML('afterbegin', `
@@ -346,9 +342,9 @@ function actualizarSelectorCapaPadre() {
 }
 
 function cambiarCapaGrupo() {
-    const nuevaCapaPadre = lienzoPrincipal.capas.buscarGrupoCapas(Number(document.getElementById('selectorCapaPadre').value));
-    lienzoPrincipal.capas.moverCapaDeGrupo(capaActual, nuevaCapaPadre)
-    agregarContenidoGrupo(lienzoPrincipal.capas)
+    const nuevaCapaPadre = mesaTrabajo.capas.buscarGrupoCapas(Number(document.getElementById('selectorCapaPadre').value));
+    mesaTrabajo.capas.moverCapaDeGrupo(capaActual, nuevaCapaPadre)
+    agregarContenidoGrupo(mesaTrabajo.capas)
     seleccionarCapa(capaActual.id, capaActual.tipoCapa)
 }
 
@@ -401,20 +397,24 @@ canvasDom.addEventListener('mousedown', (e) => {
     clickeando = true;
 
     const cordenadaActual = utiles.adaptarCordCanvas(e.clientX, e.clientY, canvasDom)
-    lienzoPrincipal.inicioClick({ cordenada: cordenadaActual, lienzoReal: canvas, parametrosTrazo: obtenerTrazoActual(cordenadaActual) })
+    mesaTrabajo.inicioClick({
+        cordenada: cordenadaActual,
+        lienzoReal: canvas,
+        parametrosTrazo: obtenerTrazoActual(cordenadaActual)
+    })
 });
 
 canvasDom.addEventListener('mousemove', (e) => {
     if (!clickeando) return
 
     const cordenadaActual = utiles.adaptarCordCanvas(e.clientX, e.clientY, canvasDom)
-    lienzoPrincipal.arrastreClick({ cordenada: cordenadaActual, lienzoReal: canvas })
+    mesaTrabajo.arrastreClick({ cordenada: cordenadaActual, lienzoReal: canvas })
 });
 
 canvasDom.addEventListener('mouseup', (e) => { // bug al hacer click derecho y izquierdo a la ves, entra sin tener un trazo generado y intenta meterse igual
     clickeando = false;
     const cordenadaActual = utiles.adaptarCordCanvas(e.clientX, e.clientY, canvasDom)
 
-    lienzoPrincipal.finClick({ cordenada: cordenadaActual, lienzoReal: canvas })
+    mesaTrabajo.finClick({ cordenada: cordenadaActual, lienzoReal: canvas })
     sincronizarCapaCanvasReal(capaActual);
 });
