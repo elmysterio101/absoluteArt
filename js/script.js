@@ -7,15 +7,11 @@ function hexToRgb(hex) {
     return { r, g, b }
 }
 const canvasDom = document.getElementById("canvasPrincipal");
-canvasDom.width = mesaTrabajo.confCapas.anchoCanvas
+canvasDom.width = mesaTrabajo.confCapas.largoCanvas
 canvasDom.height = mesaTrabajo.confCapas.altoCanvas
 const canvas = new lienzoHtml({ largo: canvasDom.width, alto: canvasDom.height, canvas: canvasDom })
 
-
-
-
 const canvasInfo = canvasDom.getBoundingClientRect();
-
 
 configuracion.configuracionesBase(canvasDom);
 
