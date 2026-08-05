@@ -405,6 +405,7 @@ canvasDom.addEventListener('mousemove', (e) => {
 
     const cordenadaActual = utiles.adaptarCordCanvas(e.clientX, e.clientY, canvasDom)
     mesaTrabajo.arrastreClick({ cordenada: cordenadaActual, lienzoReal: canvas })
+
 });
 
 canvasDom.addEventListener('mouseup', (e) => { // bug al hacer click derecho y izquierdo a la ves, entra sin tener un trazo generado y intenta meterse igual
