@@ -365,6 +365,7 @@ let opacidadSecundaria = 1;
 let grosor = 10;
 let nombreHerramienta = 'lineaSimple';
 let nombreSello = 'selloCircular'
+let continuidad = false;
 
 function obtenerColores() {
     const rgba = [{
@@ -389,7 +390,8 @@ function obtenerTrazoActual(cordInicial) {
         grosor: Number(grosor),
         herramienta: nombreHerramienta,
         relacionAnchoAlto: undefined,
-        sello : nombreSello
+        sello : nombreSello,
+        continuidad
     })
     return trazoGuardar;
 }
