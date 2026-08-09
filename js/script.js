@@ -11,6 +11,7 @@ canvasDom.width = mesaTrabajo.confCapas.largoCanvas
 canvasDom.height = mesaTrabajo.confCapas.altoCanvas
 const canvas = new lienzoHtml({ largo: canvasDom.width, alto: canvasDom.height, canvas: canvasDom })
 
+
 const canvasInfo = canvasDom.getBoundingClientRect();
 
 configuracion.configuracionesBase(canvasDom);
@@ -31,8 +32,10 @@ let capaActual = mesaTrabajo.capas
 const listaCapas = document.getElementById('listaCapas');
 
 function cambiarOpacidadCapa() {
-    capaActual.opacidad = Number(document.getElementById('capaOpacidad').value)
+    capaActual.cambiarOpacidad(Number(document.getElementById('capaOpacidad').value))
     document.getElementById('letreroCapaOpacidad').innerHTML = 'opacidad : ' + capaActual.opacidad;
+    canvas.limpiar()
+    mesaTrabajo.renderizar(canvas)
 }
 
 function cambiarVisibilidadCapa() {
@@ -346,7 +349,11 @@ function cambiarCapaGrupo() {
 
 function listarHerramientas() {
     for (const herramienta of pintor.listaHerramientas) {
-        document.getElementById("herramientas").insertAdjacentHTML('beforeend', `<option value="${herramienta.nombre}" >${herramienta.nombre}</option>`);
+        if (herramienta.categoria.nombre === 'sello')
+            document.getElementById("sellos").insertAdjacentHTML('beforeend', `<option value="${herramienta.nombre}" >${herramienta.nombre}</option>`);
+        else
+            document.getElementById("herramientas").insertAdjacentHTML('beforeend', `<option value="${herramienta.nombre}" >${herramienta.nombre}</option>`);
+
     }
 }
 listarHerramientas();
@@ -357,6 +364,7 @@ let opacidadPrincipal = 1;
 let opacidadSecundaria = 1;
 let grosor = 10;
 let nombreHerramienta = 'lineaSimple';
+let nombreSello = 'selloCircular'
 
 function obtenerColores() {
     const rgba = [{
@@ -380,7 +388,8 @@ function obtenerTrazoActual(cordInicial) {
         rgba: obtenerColores(),
         grosor: Number(grosor),
         herramienta: nombreHerramienta,
-        relacionAnchoAlto: undefined
+        relacionAnchoAlto: undefined,
+        sello : nombreSello
     })
     return trazoGuardar;
 }
@@ -388,7 +397,7 @@ function obtenerTrazoActual(cordInicial) {
 document.getElementById('cerrarConfCapa').click()
 
 let clickeando = false;
-canvasDom.addEventListener('mousedown', (e) => {
+canvasDom.addEventListener('pointerdown', (e) => {
     if (clickeando) return
     clickeando = true;
 
@@ -400,7 +409,7 @@ canvasDom.addEventListener('mousedown', (e) => {
     })
 });
 
-canvasDom.addEventListener('mousemove', (e) => {
+canvasDom.addEventListener('pointermove', (e) => {
     if (!clickeando) return
 
     const cordenadaActual = utiles.adaptarCordCanvas(e.clientX, e.clientY, canvasDom)
@@ -408,10 +417,11 @@ canvasDom.addEventListener('mousemove', (e) => {
 
 });
 
-canvasDom.addEventListener('mouseup', (e) => { // bug al hacer click derecho y izquierdo a la ves, entra sin tener un trazo generado y intenta meterse igual
+canvasDom.addEventListener('pointerup', (e) => { // bug al hacer click derecho y izquierdo a la ves, entra sin tener un trazo generado y intenta meterse igual
     clickeando = false;
     const cordenadaActual = utiles.adaptarCordCanvas(e.clientX, e.clientY, canvasDom)
 
     mesaTrabajo.finClick({ cordenada: cordenadaActual, lienzoReal: canvas })
+
     sincronizarCapaCanvasReal(capaActual);
 });

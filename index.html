@@ -64,10 +64,14 @@
             <button type="button" id="recuperarTrazo" onclick="recuperarTrazo()">adeltante</button>
         </div>
         <div class="barraHerramientas">
+            <select id="sellos">
+            </select>
+
             <select id="herramientas">
             </select>
 
-            <button type="button" onclick="nombreHerramienta = document.getElementById('herramientas').value"> seleccionar herramienta</button>
+            <button type="button" onclick=" nombreHerramienta = document.getElementById('herramientas').value ;
+                                            nombreSello = document.getElementById('sellos').value "> seleccionar herramienta</button>
 
             <div class="color">
                 <p>colorPrincipal</p>
@@ -85,7 +89,7 @@
 
     <section class="lienzo">
         <div class="seccionIzquierda">
-            
+
             <div class="configuracionLapizFondo">
                 <div class="rango">
                     <p>grosor</p>
@@ -116,7 +120,7 @@
                 <button type="button" class="configuracionTrazos">
                     configuracion listado
                 </button>
-                
+
                 <div id="listaTrazos">
                     <button type="button" class="trazo">
                         <p>indice trazo</p>
@@ -125,9 +129,9 @@
                 </div>
             </div>
         </div>
-        
+
         <canvas id="canvasPrincipal">
-            
+
         </canvas>
 
         <div class="seccionDerecha">
