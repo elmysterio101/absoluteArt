@@ -900,7 +900,7 @@ class poligonoSimple extends figura {
 
         trazoTransformado.trayectos = [trazoTransformado.obtenerTrayectoPlano()]
         trazoTransformado.continuidad = true;
-        if(!pintor.obtenerHerramienta(trazo.sello).continuidad) trazoTransformado.sello = 'selloCircular'
+        if(!pintor.obtenerHerramienta(trazo.sello).conectable) trazoTransformado.sello = 'selloCircular'
         trazoTransformado.herramienta = 'pincelSellosSimple'
         return trazoTransformado
     }
