@@ -877,6 +877,7 @@ class circuloSimple extends figura {
         return true
     }
 }
+
 class poligonoSimple extends figura {
     constructor(nombre, categoria) {
         super(nombre, categoria)
@@ -899,8 +900,6 @@ class poligonoSimple extends figura {
         if (!this.trazoEnProceso(trazo)) trazoTransformado.trayectos[trazoTransformado.trayectos.length - 1][0] = trazoTransformado.trayectos[0][0]
 
         trazoTransformado.trayectos = [trazoTransformado.obtenerTrayectoPlano()]
-        trazoTransformado.continuidad = true;
-        if(!pintor.obtenerHerramienta(trazo.sello).conectable) trazoTransformado.sello = 'selloCircular'
         trazoTransformado.herramienta = 'pincelSellosSimple'
         return trazoTransformado
     }
@@ -979,8 +978,159 @@ class pincel extends herramientaDibujo {
         return true
     }
 }
+
+class sello extends herramientaDibujo {
+    constructor(nombre, categoria) {
+        super(nombre, categoria)
+    }
+    conectable = false;
+
+}
+class selloCuadrado extends sello {
+    constructor(nombre, categoria) {
+        super(nombre, categoria)
+    }
+    usar({ x, y, grosor, r, g, b, a, lienzo }) {
+        lienzo.pintarRectangulo({ // pintarRectangulo({ x, y, largo, alto, r, g, b, a })
+            x: x - Math.floor(grosor / 2),
+            y: y - Math.floor(grosor / 2),
+            largo: grosor,
+            alto: grosor,
+            r,
+            g,
+            b,
+            a
+        })
+    }
+}
+class selloCircular extends sello {
+    constructor(nombre, categoria) {
+        super(nombre, categoria)
+    }
+    conectable = true;
+
+    usar({ x, y, grosor, r, g, b, a, lienzo }) {
+        lienzo.pintarCirculo({
+            x,
+            y,
+            radio: grosor / 2,
+            r,
+            g,
+            b,
+            a,
+            rotacion: 0,
+            inicio: 0,
+            fin: Math.PI * 2
+        })
+    }
+
+    conectarSellos({ trayecto, grosor, r, g, b, a, lienzo }) {
+        lienzo.pintarTrayectoLineas({
+            trayecto,
+            grosor,
+            r,
+            g,
+            b,
+            a
+        })
+    }
+}
+class selloCaligrafia extends sello {
+    constructor(nombre, categoria) {
+        super(nombre, categoria)
+    }
+    conectable = true;
+
+    usar({ x, y, grosor, r, g, b, a, lienzo }) {
+        lienzo.pintarLinea({
+            x1: x - Math.floor(grosor / 2),
+            y1: y - Math.floor(grosor / 2),
+            x2: x + Math.floor(grosor / 2),
+            y2: y + Math.floor(grosor / 2),
+            grosor: 1,
+            r,
+            g,
+            b,
+            a
+        })
+    }
+
+    conectarSellos({ trayecto, grosor, r, g, b, a, lienzo }) {
+        let pixelActual = Math.floor(grosor / 2)
+        for (let t = 0; t < trayecto.length; t++) {
+            trayecto[t].x -= pixelActual;
+            trayecto[t].y -= pixelActual;
+        }
+        for (let i = 0; i < grosor; i++) {
+            for (let t = 0; t < trayecto.length; t++) {
+                trayecto[t].x++;
+                trayecto[t].y++;
+
+            }
+            lienzo.pintarTrayectoLineas({
+                trayecto,
+                grosor: 2,
+                r,
+                g,
+                b,
+                a
+            })
+        }
+    }
+}
+
+class pincelSellosSimple extends pincel {
+    constructor(nombre, categoria, trayectoMuyLargo, modoPincel) {
+        super(nombre, categoria, trayectoMuyLargo, modoPincel)
+    }
+
+    dibujo(lienzo, trazo) {
+        const sello = pintor.obtenerHerramienta(trazo.sello)
+        const infoSeparacion = trazo.ajustarSeparacionTrayecto({ sobrante: trazo.sobrante })
+        if (trazo.sobrante !== undefined) trazo.sobrante = infoSeparacion.sobrante
+        const cordenadas = infoSeparacion.trayectoSeccionado
+
+        for (const cord of cordenadas) {
+            sello.usar({
+                x: cord.x + trazo.puntoInicial.x,
+                y: cord.y + trazo.puntoInicial.y,
+                grosor: trazo.grosor,
+                r: trazo.rgba[0].r,
+                g: trazo.rgba[0].g,
+                b: trazo.rgba[0].b,
+                a: 1,
+                lienzo: lienzo
+            })
+        }
+
+        if (trazo.continuidad) {
+            if (sello.conectable) {
+                sello.conectarSellos({
+                    trayecto: trazo.obtenerTrayectosCordsAbsolutas()[0],
+                    grosor: trazo.grosor,
+                    r: trazo.rgba[0].r,
+                    g: trazo.rgba[0].g,
+                    b: trazo.rgba[0].b,
+                    a: 1,
+                    lienzo: lienzo
+                })
+            }
+        }
+
+    }
+
+    usar({ lienzo, lienzoIntermediario, trazo }) {
+        if (trazo.rgba[0].a === 0) return
+
+        this.dibujo(lienzoIntermediario.lienzoComun, trazo)
+
+        if (this.modoPincel === "pintar") lienzo.pegarLienzo({ lienzo: lienzoIntermediario.lienzoComun, x: 0, y: 0, alpha: trazo.rgba[0].a })
+        if (this.modoPincel === "borrar") lienzo.restarAlphaLienzo({ lienzo: lienzoIntermediario.lienzoComun, x: 0, y: 0, alpha: trazo.rgba[0].a })
+    }
+}
+
 class trazo {
-    constructor({ trayectos, puntoInicial, rgba, grosor, herramienta, relacionAnchoAlto, sello , continuidad}) { // le puedo agregar cosas pero por ahora va este 
+    constructor({ trayectos, puntoInicial, rgba, grosor, herramienta, relacionAnchoAlto, sello, continuidad, separacion }) { // le puedo agregar cosas pero por ahora va este 
         this.trayectos = trayectos;
         this.puntoInicial = puntoInicial;
         this.rgba = rgba;
@@ -989,6 +1139,7 @@ class trazo {
         this.herramienta = herramienta; // es un string, simplemente el nombre de la herramienta
         this.sello = sello;
         this.continuidad = continuidad;
+        this.separacion = separacion;
     }
     cajaDelimitadora() { // se toma asi pq es cordenada relativa a punto inicial, la cord 0 siempre es 0 0 
         let x1 = 0;
@@ -1084,7 +1235,8 @@ class trazo {
             trayectos: this.clonarTrayectos(),
             herramienta: this.herramienta,
             sello: this.sello,
-            continuidad : this.continuidad 
+            continuidad: this.continuidad,
+            separacion: this.separacion
         })
     }
     agregarTrazo(cordenada) {
@@ -1127,160 +1279,46 @@ class trazo {
         }
         return cordenadas;
     }
+    ajustarSeparacionTrayecto({ separacion, sobrante = 0 } = {}) {
+        const trayectoSeccionado = [{ x: 0, y: 0 }];
+        if (!separacion) separacion = this.grosor * Math.max(this.separacion, 0.01);
 
-}
+        for (let i = 0; i < this.trayectos[0].length - 1; i++) {
+            const origenTramo = this.trayectos[0][i];
+            const finTramo = this.trayectos[0][i + 1];
 
-class sello extends herramientaDibujo {
-    constructor(nombre, categoria) {
-        super(nombre, categoria)
-    }
-    conectable = false;
+            const largo = finTramo.x - origenTramo.x;
+            const alto = finTramo.y - origenTramo.y;
 
-}
+            let hyp = 0
+            if (largo === 0 || alto === 0)
+                hyp = Math.max(Math.abs(largo), Math.abs(alto))
+            else
+                hyp = Math.hypot(largo, alto);
 
-class selloCuadrado extends sello {
-    constructor(nombre, categoria) {
-        super(nombre, categoria)
-    }
-    usar({ x, y, grosor, r, g, b, a, lienzo }) {
-        lienzo.pintarRectangulo({ // pintarRectangulo({ x, y, largo, alto, r, g, b, a })
-            x: x - Math.floor(grosor / 2),
-            y: y - Math.floor(grosor / 2),
-            largo: grosor,
-            alto: grosor,
-            r,
-            g,
-            b,
-            a
-        })
-    }
-}
+            if (hyp === 0) continue;
 
-class selloCircular extends sello {
-    constructor(nombre, categoria) {
-        super(nombre, categoria)
-    }
-    conectable = true;
+            const distanciaTotal = hyp + sobrante;
+            const puntos = Math.floor(distanciaTotal / separacion);
 
-    usar({ x, y, grosor, r, g, b, a, lienzo }) {
-        lienzo.pintarCirculo({
-            x,
-            y,
-            radio: grosor / 2,
-            r,
-            g,
-            b,
-            a,
-            rotacion: 0,
-            inicio: 0,
-            fin: Math.PI * 2
-        })
-    }
+            const dirX = largo / hyp;
+            const dirY = alto / hyp;
 
-    conectarSellos({ trayecto, grosor, r, g, b, a, lienzo }) {
-        lienzo.pintarTrayectoLineas({
-            trayecto,
-            grosor,
-            r,
-            g,
-            b,
-            a
-        })
-    }
-}
-
-class selloCaligrafia extends sello {
-    constructor(nombre, categoria) {
-        super(nombre, categoria)
-    }
-    conectable = true;
-
-    usar({ x, y, grosor, r, g, b, a, lienzo }) {
-        lienzo.pintarLinea({
-            x1: x - Math.floor(grosor / 2),
-            y1: y - Math.floor(grosor / 2),
-            x2: x + Math.floor(grosor / 2),
-            y2: y + Math.floor(grosor / 2),
-            grosor: 1,
-            r,
-            g,
-            b,
-            a
-        })
-    }
-
-    conectarSellos({ trayecto, grosor, r, g, b, a, lienzo }) {
-        let pixelActual = Math.floor(grosor / 2)
-        for (let t = 0; t < trayecto.length; t++) {
-            trayecto[t].x -= pixelActual;
-            trayecto[t].y -= pixelActual;
-        }
-        for (let i = 0; i < grosor; i++) {
-            for (let t = 0; t < trayecto.length; t++) {
-                trayecto[t].x++;
-                trayecto[t].y++;
-
+            let d = separacion - sobrante;
+            for (let n = 0; n < puntos; n++) {
+                trayectoSeccionado.push({
+                    x: origenTramo.x + dirX * d,
+                    y: origenTramo.y + dirY * d
+                });
+                d += separacion;
             }
-            lienzo.pintarTrayectoLineas({
-                trayecto,
-                grosor: 2,
-                r,
-                g,
-                b,
-                a
-            })
+
+            sobrante = distanciaTotal % separacion;
         }
+
+        return { trayectoSeccionado, sobrante };
     }
 }
-
-
-class pincelSellosSimple extends pincel {
-    constructor(nombre, categoria, trayectoMuyLargo, modoPincel) {
-        super(nombre, categoria, trayectoMuyLargo, modoPincel)
-    }
-
-    dibujo(lienzo, trazo) {
-        const sello = pintor.obtenerHerramienta(trazo.sello)
-        for (const cord of trazo.trayectos[0]) {
-            sello.usar({
-                x: cord.x + trazo.puntoInicial.x,
-                y: cord.y + trazo.puntoInicial.y,
-                grosor: trazo.grosor,
-                r: trazo.rgba[0].r,
-                g: trazo.rgba[0].g,
-                b: trazo.rgba[0].b,
-                a: 1,
-                lienzo: lienzo
-            })
-        }
-
-
-        if (trazo.continuidad) {
-            if (sello.conectable) {
-                sello.conectarSellos({
-                    trayecto: trazo.obtenerTrayectosCordsAbsolutas()[0],
-                    grosor: trazo.grosor,
-                    r: trazo.rgba[0].r,
-                    g: trazo.rgba[0].g,
-                    b: trazo.rgba[0].b,
-                    a: 1,
-                    lienzo: lienzo
-                })
-            }
-        }
-
-    }
-
-    usar({ lienzo, lienzoIntermediario, trazo }) {
-        if (trazo.rgba[0].a === 0) return
-
-        this.dibujo(lienzoIntermediario.lienzoComun, trazo)
-
-        if (this.modoPincel === "pintar") lienzo.pegarLienzo({ lienzo: lienzoIntermediario.lienzoComun, x: 0, y: 0, alpha: trazo.rgba[0].a })
-        if (this.modoPincel === "borrar") lienzo.restarAlphaLienzo({ lienzo: lienzoIntermediario.lienzoComun, x: 0, y: 0, alpha: trazo.rgba[0].a })
-    }
-}
-
 
 const lienzos = {
     contadorLienzos: 0,
@@ -1310,14 +1348,12 @@ const pintor = {
     listaCategorias: [],
 
     dibujar(lienzoDibujar, trazo) {
-        //this.acomLienzInterm({ alto: lienzoDibujar.alto, largo: lienzoDibujar.largo })
-        this.lienzosIntermediarios.lienzoPincel.soyPincel = true;
 
         lienzos.acomodar({ lienzo: this.lienzosIntermediarios.lienzoComun, alto: lienzoDibujar.alto, largo: lienzoDibujar.largo })
 
         this.obtenerHerramienta(trazo.herramienta).usar({
             lienzo: lienzoDibujar,
-            trazo: trazo,
+            trazo,
             lienzoIntermediario: this.lienzosIntermediarios
         })
         this.lienzosIntermediarios.lienzoComun.limpiar()
@@ -1431,6 +1467,7 @@ const mesaTrabajo = {
         this.prepararLienzosSanduich()
         this.trazoGuardar.agregarTrazo(cordenada)
         this.trazoTemporal = this.trazoGuardar.clonar()
+        this.trazoTemporal.sobrante = 0;
     },
 
     arrastreClick({ cordenada, lienzoReal }) {
@@ -1439,6 +1476,7 @@ const mesaTrabajo = {
         lienzoReal.limpiar()
         if (this.herramientaActiva.perteneceCategoria(pintor.obtenerCategoria('pinceles'))) {
             this.trazoGuardar.agregarCordenada(cordenada)
+
             this.trazoTemporal.trayectos[0][0] = this.trazoGuardar.trayectos[0][this.trazoGuardar.trayectos[0].length - 2]
             this.trazoTemporal.trayectos[0][1] = this.trazoGuardar.trayectos[0][this.trazoGuardar.trayectos[0].length - 1]
 
