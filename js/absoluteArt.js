@@ -1141,7 +1141,7 @@ class poligonoSimple extends figura {
 
 }
 
-class figuraSellos extends figura {
+class figuraSellos extends lineaSimple {
     constructor(nombre, categoria, verticesFigura) {
         super(nombre, categoria)
         this.verticesFigura = verticesFigura
@@ -1159,14 +1159,27 @@ class figuraSellos extends figura {
         const caja = trazo.cajaDelimitadora()
         const puntos = []
 
+        let restarX = false
+        let restarY = false
+        if (caja.x < 0) restarX = true
+        if (caja.y < 0) restarY = true
         for (const vertice of this.verticesFigura) {
-            puntos.push({ x: vertice.x * caja.largo + caja.x, y: vertice.y * caja.alto + caja.y })
+            let verticeX = vertice.x
+            let verticeY = vertice.y
+            if (restarX) verticeX = 1 - verticeX
+            if (restarY) verticeY = 1 - verticeY
+            puntos.push({
+                x: verticeX * caja.largo + caja.x,
+                y: verticeY * caja.alto + caja.y
+            })
         }
 
         if (this.verticesFigura.length > 2) puntos.push(puntos[0])
         clonTrazo.trayectos[0] = puntos;
         return clonTrazo;
     }
+
+    
 }
 
 class trazo {
@@ -1320,7 +1333,7 @@ class trazo {
         return cordenadas;
     }
     ajustarSeparacionTrayecto({ separacion, sobrante = 0 } = {}) {
-        const trayectoSeccionado = [{ x: 0, y: 0 }];
+        const trayectoSeccionado = [{x : this.trayectos[0][0].x , y : this.trayectos[0][0].y}];
         if (!separacion) separacion = this.grosor * Math.max(this.separacion, 0.01);
 
         for (let i = 0; i < this.trayectos[0].length - 1; i++) {
@@ -1355,7 +1368,6 @@ class trazo {
 
             sobrante = distanciaTotal % separacion;
         }
-        if (this.trayectos[0][0].x !== 0 && this.trayectos[0][0].y !== 0) trayectoSeccionado.splice(0, 1)
         return { trayectoSeccionado, sobrante };
     }
 }
