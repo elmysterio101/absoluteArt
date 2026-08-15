@@ -877,63 +877,6 @@ class circuloSimple extends figura {
         return true
     }
 }
-
-class poligonoSimple extends figura {
-    constructor(nombre, categoria) {
-        super(nombre, categoria)
-    }
-
-    cordenadasRepetibles = false;
-    trayectosNecesarios = 1;
-    cordenadasNecesarios = [2]; // esto del trazo 0 ,  en caso de figuras porlomenos, en caso de una herramienta selectora libre seria del trazo 2
-
-    usar({ lienzo, trazo, lienzoIntermediario }) { // ({ x1, y1, x2, y2, grosor, r, g, b, a })
-        if (!this.trazoValido(trazo)) return
-        pintor.dibujar(lienzo, this.transformarTrazoEnPincel(trazo))
-    }
-
-    transformarTrazoEnPincel(trazo) {
-        const trazoTransformado = trazo.clonar()
-        for (let i = 1; i < trazoTransformado.trayectos.length; i++) {
-            if (trazoTransformado.trayectos[i].length > 1) trazoTransformado.trayectos[i].splice(0, 1)
-        }
-        if (!this.trazoEnProceso(trazo)) trazoTransformado.trayectos[trazoTransformado.trayectos.length - 1][0] = trazoTransformado.trayectos[0][0]
-
-        trazoTransformado.trayectos = [trazoTransformado.obtenerTrayectoPlano()]
-        trazoTransformado.herramienta = 'pincelSellosSimple'
-        return trazoTransformado
-    }
-
-    trazoValido(trazo) {
-        if (trazo.trayectos.length > 0)
-            if (trazo.trayectos[0].length === 1)
-                return false
-            else
-                if (trazo.trayectos[0][0].x === trazo.trayectos[0][1].x && trazo.trayectos[0][0].y === trazo.trayectos[0][1].y) return false
-        return true
-    }
-
-    trazoEnProceso(trazo) {
-        if (trazo.trayectos.length < 1) return false
-
-        const cordenadas = trazo.obtenerTrayectoPlano()
-        const margen = trazo.grosor; // agregar como parametro el margen , para poder usarlo en herramientas nuevas cuando haya lego
-        const inicio = cordenadas[0]
-        const fin = cordenadas[cordenadas.length - 1]
-
-
-        if (inicio.x - margen <= fin.x && fin.x <= inicio.x + margen &&
-            inicio.y - margen <= fin.y && fin.y <= inicio.y + margen)
-            return false
-
-        if (trazo.trayectos.length > 2)
-            if (cordenadas[cordenadas.length - 1].x === cordenadas[cordenadas.length - 3].x &&
-                cordenadas[cordenadas.length - 1].y === cordenadas[cordenadas.length - 3].y) return false
-        return true
-    }
-
-}
-
 class pincel extends herramientaDibujo {
     constructor(nombre, categoria, trayectoMuyLargo, modoPincel) {
         super(nombre, categoria)
@@ -978,7 +921,6 @@ class pincel extends herramientaDibujo {
         return true
     }
 }
-
 class sello extends herramientaDibujo {
     constructor(nombre, categoria) {
         super(nombre, categoria)
@@ -986,6 +928,7 @@ class sello extends herramientaDibujo {
     conectable = false;
 
 }
+
 class selloCuadrado extends sello {
     constructor(nombre, categoria) {
         super(nombre, categoria)
@@ -1086,24 +1029,37 @@ class pincelSellosSimple extends pincel {
 
     dibujo(lienzo, trazo) {
         const sello = pintor.obtenerHerramienta(trazo.sello)
-        const infoSeparacion = trazo.ajustarSeparacionTrayecto({ sobrante: trazo.sobrante })
-        if (trazo.sobrante !== undefined) trazo.sobrante = infoSeparacion.sobrante
-        const cordenadas = infoSeparacion.trayectoSeccionado
+        if (!trazo.continuidad) {
+            const infoSeparacion = trazo.ajustarSeparacionTrayecto({ sobrante: trazo.sobrante })
+            if (trazo.sobrante !== undefined) trazo.sobrante = infoSeparacion.sobrante
+            const cordenadas = infoSeparacion.trayectoSeccionado
 
-        for (const cord of cordenadas) {
-            sello.usar({
-                x: cord.x + trazo.puntoInicial.x,
-                y: cord.y + trazo.puntoInicial.y,
-                grosor: trazo.grosor,
-                r: trazo.rgba[0].r,
-                g: trazo.rgba[0].g,
-                b: trazo.rgba[0].b,
-                a: 1,
-                lienzo: lienzo
-            })
-        }
+            for (const cord of cordenadas) {
+                sello.usar({
+                    x: cord.x + trazo.puntoInicial.x,
+                    y: cord.y + trazo.puntoInicial.y,
+                    grosor: trazo.grosor,
+                    r: trazo.rgba[0].r,
+                    g: trazo.rgba[0].g,
+                    b: trazo.rgba[0].b,
+                    a: 1,
+                    lienzo: lienzo
+                })
+            }
 
-        if (trazo.continuidad) {
+        } else {
+            for (const cord of trazo.trayectos[0]) {
+                sello.usar({
+                    x: cord.x + trazo.puntoInicial.x,
+                    y: cord.y + trazo.puntoInicial.y,
+                    grosor: trazo.grosor,
+                    r: trazo.rgba[0].r,
+                    g: trazo.rgba[0].g,
+                    b: trazo.rgba[0].b,
+                    a: 1,
+                    lienzo: lienzo
+                })
+            }
             if (sello.conectable) {
                 sello.conectarSellos({
                     trayecto: trazo.obtenerTrayectosCordsAbsolutas()[0],
@@ -1126,6 +1082,90 @@ class pincelSellosSimple extends pincel {
 
         if (this.modoPincel === "pintar") lienzo.pegarLienzo({ lienzo: lienzoIntermediario.lienzoComun, x: 0, y: 0, alpha: trazo.rgba[0].a })
         if (this.modoPincel === "borrar") lienzo.restarAlphaLienzo({ lienzo: lienzoIntermediario.lienzoComun, x: 0, y: 0, alpha: trazo.rgba[0].a })
+    }
+}
+
+class poligonoSimple extends figura {
+    constructor(nombre, categoria) {
+        super(nombre, categoria)
+    }
+
+    cordenadasRepetibles = false;
+    trayectosNecesarios = 1;
+    cordenadasNecesarios = [2]; // esto del trazo 0 ,  en caso de figuras porlomenos, en caso de una herramienta selectora libre seria del trazo 2
+
+    usar({ lienzo, trazo, lienzoIntermediario }) { // ({ x1, y1, x2, y2, grosor, r, g, b, a })
+        if (!this.trazoValido(trazo)) return
+        pintor.dibujar(lienzo, this.transformarTrazoEnPincel(trazo))
+    }
+
+    transformarTrazoEnPincel(trazo) {
+        const trazoTransformado = trazo.clonar()
+        for (let i = 1; i < trazoTransformado.trayectos.length; i++) {
+            if (trazoTransformado.trayectos[i].length > 1) trazoTransformado.trayectos[i].splice(0, 1)
+        }
+        if (!this.trazoEnProceso(trazo)) trazoTransformado.trayectos[trazoTransformado.trayectos.length - 1][0] = trazoTransformado.trayectos[0][0]
+
+        trazoTransformado.trayectos = [trazoTransformado.obtenerTrayectoPlano()]
+        trazoTransformado.herramienta = 'pincelSellosSimple'
+        return trazoTransformado
+    }
+
+    trazoValido(trazo) {
+        if (trazo.trayectos.length > 0)
+            if (trazo.trayectos[0].length === 1)
+                return false
+            else
+                if (trazo.trayectos[0][0].x === trazo.trayectos[0][1].x && trazo.trayectos[0][0].y === trazo.trayectos[0][1].y) return false
+        return true
+    }
+
+    trazoEnProceso(trazo) {
+        if (trazo.trayectos.length < 1) return false
+
+        const cordenadas = trazo.obtenerTrayectoPlano()
+        const margen = trazo.grosor; // agregar como parametro el margen , para poder usarlo en herramientas nuevas cuando haya lego
+        const inicio = cordenadas[0]
+        const fin = cordenadas[cordenadas.length - 1]
+
+
+        if (inicio.x - margen <= fin.x && fin.x <= inicio.x + margen &&
+            inicio.y - margen <= fin.y && fin.y <= inicio.y + margen)
+            return false
+
+        if (trazo.trayectos.length > 2)
+            if (cordenadas[cordenadas.length - 1].x === cordenadas[cordenadas.length - 3].x &&
+                cordenadas[cordenadas.length - 1].y === cordenadas[cordenadas.length - 3].y) return false
+        return true
+    }
+
+}
+
+class figuraSellos extends figura {
+    constructor(nombre, categoria, verticesFigura) {
+        super(nombre, categoria)
+        this.verticesFigura = verticesFigura
+    }
+
+    usar({ lienzo, trazo, lienzoIntermediario }) {
+        if (!this.trazoValido(trazo)) return
+        const trazoDeformado = this.transformarVerticesPuntos(trazo)
+        pintor.dibujar(lienzo, trazoDeformado)
+    }
+
+    transformarVerticesPuntos(trazo) {
+        const clonTrazo = trazo.clonar();
+        clonTrazo.herramienta = 'pincelSellosSimple'
+        const caja = trazo.cajaDelimitadora()
+        const puntos = []
+
+        for (const vertice of this.verticesFigura) {
+            puntos.push({ x: vertice.x * caja.largo + caja.x, y: vertice.y * caja.alto + caja.y })
+        }
+
+        if (this.verticesFigura.length > 2) puntos.push(puntos[0])
+        clonTrazo.trayectos[0] = puntos;
+        return clonTrazo;
     }
 }
 
@@ -1315,7 +1355,7 @@ class trazo {
 
             sobrante = distanciaTotal % separacion;
         }
-
+        if (this.trayectos[0][0].x !== 0 && this.trayectos[0][0].y !== 0) trayectoSeccionado.splice(0, 1)
         return { trayectoSeccionado, sobrante };
     }
 }
@@ -1379,17 +1419,56 @@ const pintor = {
     cargarHerramientas() { // orden irrelevante
         this.cargarCategorias();
         this.listaHerramientas.push(
-            this.agregarHerramienta((new lineaSimple('lineaSimple', this.obtenerCategoria('figuras')))),
-            this.agregarHerramienta((new rectanguloSimple('rectanguloSimple', this.obtenerCategoria('figuras')))),
-            this.agregarHerramienta((new elipseSimple('elipseSimple', this.obtenerCategoria('figuras')))),
-            this.agregarHerramienta((new circuloSimple('circuloSimple', this.obtenerCategoria('figuras')))),
-            this.agregarHerramienta((new poligonoSimple('poligonoSimple', this.obtenerCategoria('figuras')))),
+            this.agregarHerramienta(new lineaSimple('lineaSimple', this.obtenerCategoria('figuras'))),
+            this.agregarHerramienta(new rectanguloSimple('rectanguloSimple', this.obtenerCategoria('figuras'))),
+            this.agregarHerramienta(new elipseSimple('elipseSimple', this.obtenerCategoria('figuras'))),
+            this.agregarHerramienta(new circuloSimple('circuloSimple', this.obtenerCategoria('figuras'))),
+            this.agregarHerramienta(new poligonoSimple('poligonoSimple', this.obtenerCategoria('figuras'))),
 
-            this.agregarHerramienta((new selloCuadrado('selloCuadrado', this.obtenerCategoria('sello')))),
-            this.agregarHerramienta((new selloCaligrafia('selloCaligrafia', this.obtenerCategoria('sello')))),
-            this.agregarHerramienta((new selloCircular('selloCircular', this.obtenerCategoria('sello')))),
-            this.agregarHerramienta((new pincelSellosSimple('pincelSellosSimple', this.obtenerCategoria('pinceles'), 800, "pintar"))),
-            this.agregarHerramienta((new pincelSellosSimple('borradorSellosSimple', this.obtenerCategoria('pinceles'), 800, "borrar"))),
+            this.agregarHerramienta(new selloCuadrado('selloCuadrado', this.obtenerCategoria('sello'))),
+            this.agregarHerramienta(new selloCaligrafia('selloCaligrafia', this.obtenerCategoria('sello'))),
+            this.agregarHerramienta(new selloCircular('selloCircular', this.obtenerCategoria('sello'))),
+
+            this.agregarHerramienta(new pincelSellosSimple('pincelSellosSimple', this.obtenerCategoria('pinceles'), 4000, "pintar")),
+            this.agregarHerramienta(new pincelSellosSimple('borradorSellosSimple', this.obtenerCategoria('pinceles'), 4000, "borrar")),
+            this.agregarHerramienta(new figuraSellos('lineaSello', this.obtenerCategoria('figuras'),
+                [{ x: 0, y: 0 },
+                { x: 1, y: 1 }])),
+            this.agregarHerramienta(new figuraSellos('trianguloSellos', this.obtenerCategoria('figuras'),
+                [{ x: 0, y: 1 },
+                { x: 1, y: 1 },
+                { x: 0.5, y: 0 }])),
+            this.agregarHerramienta(new figuraSellos('rectanguloSello', this.obtenerCategoria('figuras'),
+                [{ x: 0, y: 0 },
+                { x: 0, y: 1 },
+                { x: 1, y: 1 },
+                { x: 1, y: 0 }])),
+            this.agregarHerramienta(new figuraSellos('pentagonoSello', this.obtenerCategoria('figuras'),
+                [{ x: 0.8, y: 1 },
+                { x: 0.2, y: 1 },
+                { x: 0, y: 0.4 },
+                { x: 0.5, y: 0 },
+                { x: 1, y: 0.4 },])),
+            this.agregarHerramienta(new figuraSellos('flechaDerecha', this.obtenerCategoria('figuras'),
+                [{ x: 0, y: 0.25 },
+                { x: 0.5, y: 0.25 },
+                { x: 0.5, y: 0 },
+                { x: 1, y: 0.5 },
+                { x: 0.5, y: 1 },
+                { x: 0.5, y: 0.75 },
+                { x: 0, y: 0.75 }])),
+            this.agregarHerramienta(new figuraSellos('estrella', this.obtenerCategoria('figuras'),
+                [{ x: 0.500, y: 0.000 },
+                { x: 0.618, y: 0.363 },
+                { x: 0.976, y: 0.363 },
+                { x: 0.685, y: 0.575 },
+                { x: 0.794, y: 0.938 },
+                { x: 0.500, y: 0.724 },
+                { x: 0.206, y: 0.938 },
+                { x: 0.315, y: 0.575 },
+                { x: 0.024, y: 0.363 },
+                { x: 0.382, y: 0.363 },
+                ])),
         )
     },
     agregarHerramienta(herramienta) {
