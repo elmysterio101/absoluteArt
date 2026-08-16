@@ -366,6 +366,7 @@ let grosor = 10;
 let nombreHerramienta = 'lineaSimple';
 let nombreSello = 'selloCircular'
 let continuidad = false;
+let modoDibujo = 'pintar';
 let separacion = 1
 
 function obtenerColores() {
@@ -390,9 +391,9 @@ function obtenerTrazoActual(cordInicial) {
         rgba: obtenerColores(),
         grosor: Number(grosor),
         herramienta: nombreHerramienta,
-        relacionAnchoAlto: undefined,
-        sello : nombreSello,
+        sello: nombreSello,
         continuidad,
+        modoDibujo,
         separacion
     })
     return trazoGuardar;
@@ -401,6 +402,7 @@ function obtenerTrazoActual(cordInicial) {
 document.getElementById('cerrarConfCapa').click()
 
 let clickeando = false;
+let ultimoMovimiento = 0;
 canvasDom.addEventListener('pointerdown', (e) => {
     if (clickeando) return
     clickeando = true;
@@ -412,20 +414,29 @@ canvasDom.addEventListener('pointerdown', (e) => {
         parametrosTrazo: obtenerTrazoActual(cordenadaActual)
     })
 });
-
 canvasDom.addEventListener('pointermove', (e) => {
-    if (!clickeando) return
-
-    const cordenadaActual = utiles.adaptarCordCanvas(e.clientX, e.clientY, canvasDom)
-    mesaTrabajo.arrastreClick({ cordenada: cordenadaActual, lienzoReal: canvas })
-
+    let tiempMovimiento = performance.now() - ultimoMovimiento;
+    if (ultimoMovimiento = 0) tiempMovimiento = 0
+   // console.log(tiempMovimiento)
+    if (clickeando) {
+        const cordenadaActual = utiles.adaptarCordCanvas(e.clientX, e.clientY, canvasDom)
+        mesaTrabajo.arrastreClick({
+            cordenada: cordenadaActual,
+            tiempoArrastre: tiempMovimiento,
+            lienzoReal: canvas
+        })
+    }
+    ultimoMovimiento = performance.now()
 });
 
-canvasDom.addEventListener('pointerup', (e) => { // bug al hacer click derecho y izquierdo a la ves, entra sin tener un trazo generado y intenta meterse igual
+canvasDom.addEventListener('pointerup', (e) => {
     clickeando = false;
     const cordenadaActual = utiles.adaptarCordCanvas(e.clientX, e.clientY, canvasDom)
 
-    mesaTrabajo.finClick({ cordenada: cordenadaActual, lienzoReal: canvas })
+    mesaTrabajo.finClick({
+        cordenada: cordenadaActual,
+        lienzoReal: canvas
+    })
 
     sincronizarCapaCanvasReal(capaActual);
 });

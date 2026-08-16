@@ -307,7 +307,11 @@ class grupoCapas extends capaBase { // ctx cambiado
     }
     buscarGrupoCapas(id) { // arreglar lo de la ubicacion absolute de lienzoPrincipal , no deberian manejar absolutez en ningun contexto sin importar que 
         if (id === 0) {
-            return absoluteArt.mesaTrabajo.capas; // capa " dios " digamos
+            let capaPadre = this
+            while (capaPadre.capaPadre) {
+                capaPadre = capaPadre.capaPadre
+            }
+            return capaPadre
         }
         if (this.contenido.length > 0) {
             for (const lugar of this.contenido) {
@@ -1149,50 +1153,52 @@ class figuraSellos extends lineaSimple {
 
     usar({ lienzo, trazo, lienzoIntermediario }) {
         if (!this.trazoValido(trazo)) return
-        const trazoDeformado = this.transformarVerticesPuntos(trazo)
-        pintor.dibujar(lienzo, trazoDeformado)
+        const clonTrazo = trazo.clonar();
+        clonTrazo.herramienta = 'pincelSellosSimple'
+        const puntosVertices = this.transformarVerticesPuntos(trazo)
+        for (const vertices of puntosVertices) {
+            clonTrazo.trayectos[0] = vertices;
+            pintor.dibujar(lienzo, clonTrazo)
+        }
     }
 
     transformarVerticesPuntos(trazo) {
-        const clonTrazo = trazo.clonar();
-        clonTrazo.herramienta = 'pincelSellosSimple'
         const caja = trazo.cajaDelimitadora()
-        const puntos = []
+        const secciones = []
 
-        let restarX = false
-        let restarY = false
-        if (caja.x < 0) restarX = true
-        if (caja.y < 0) restarY = true
-        for (const vertice of this.verticesFigura) {
-            let verticeX = vertice.x
-            let verticeY = vertice.y
-            if (restarX) verticeX = 1 - verticeX
-            if (restarY) verticeY = 1 - verticeY
-            puntos.push({
-                x: verticeX * caja.largo + caja.x,
-                y: verticeY * caja.alto + caja.y
-            })
+        const restarX = (caja.x < 0) ? true : false
+        const restarY = (caja.y < 0) ? true : false
+        for (const vertices of this.verticesFigura) {
+            const puntos = []
+            for (const vertice of vertices) {
+                const verticeX = (restarX) ? 1 - vertice.x : vertice.x
+                const verticeY = (restarY) ? 1 - vertice.y : vertice.y
+
+                puntos.push({
+                    x: verticeX * caja.largo + caja.x,
+                    y: verticeY * caja.alto + caja.y
+                })
+            }
+            secciones.push(puntos)
         }
 
-        if (this.verticesFigura.length > 2) puntos.push(puntos[0])
-        clonTrazo.trayectos[0] = puntos;
-        return clonTrazo;
+        return secciones;
     }
 
-    
+
 }
 
 class trazo {
-    constructor({ trayectos, puntoInicial, rgba, grosor, herramienta, relacionAnchoAlto, sello, continuidad, separacion }) { // le puedo agregar cosas pero por ahora va este 
+    constructor({ trayectos, puntoInicial, rgba, grosor, herramienta, sello, continuidad, separacion , modoDibujo}) { // le puedo agregar cosas pero por ahora va este 
         this.trayectos = trayectos;
         this.puntoInicial = puntoInicial;
         this.rgba = rgba;
         this.grosor = grosor;
-        this.relacionAnchoAlto = relacionAnchoAlto;
         this.herramienta = herramienta; // es un string, simplemente el nombre de la herramienta
         this.sello = sello;
         this.continuidad = continuidad;
         this.separacion = separacion;
+        this.modoDibujo = modoDibujo;
     }
     cajaDelimitadora() { // se toma asi pq es cordenada relativa a punto inicial, la cord 0 siempre es 0 0 
         let x1 = 0;
@@ -1282,14 +1288,14 @@ class trazo {
     clonar() {
         return new trazo({
             puntoInicial: { x: this.puntoInicial.x, y: this.puntoInicial.y },
-            //relacionAnchoAlto: { alto: this.relacionAnchoAlto.alto, ancho: this.relacionAnchoAlto.ancho },
             grosor: this.grosor,
             rgba: this.clonarRGBA(),
             trayectos: this.clonarTrayectos(),
             herramienta: this.herramienta,
             sello: this.sello,
             continuidad: this.continuidad,
-            separacion: this.separacion
+            separacion: this.separacion,
+            modoDibujo: this.modoDibujo
         })
     }
     agregarTrazo(cordenada) {
@@ -1333,7 +1339,8 @@ class trazo {
         return cordenadas;
     }
     ajustarSeparacionTrayecto({ separacion, sobrante = 0 } = {}) {
-        const trayectoSeccionado = [{x : this.trayectos[0][0].x , y : this.trayectos[0][0].y}];
+        let trayectoSeccionado = [];
+        if (sobrante === 0) trayectoSeccionado = [{ x: this.trayectos[0][0].x, y: this.trayectos[0][0].y }];
         if (!separacion) separacion = this.grosor * Math.max(this.separacion, 0.01);
 
         for (let i = 0; i < this.trayectos[0].length - 1; i++) {
@@ -1368,6 +1375,7 @@ class trazo {
 
             sobrante = distanciaTotal % separacion;
         }
+
         return { trayectoSeccionado, sobrante };
     }
 }
@@ -1443,34 +1451,40 @@ const pintor = {
 
             this.agregarHerramienta(new pincelSellosSimple('pincelSellosSimple', this.obtenerCategoria('pinceles'), 4000, "pintar")),
             this.agregarHerramienta(new pincelSellosSimple('borradorSellosSimple', this.obtenerCategoria('pinceles'), 4000, "borrar")),
-            this.agregarHerramienta(new figuraSellos('lineaSello', this.obtenerCategoria('figuras'),
-                [{ x: 0, y: 0 },
-                { x: 1, y: 1 }])),
+            this.agregarHerramienta(new figuraSellos('cruzSellos', this.obtenerCategoria('figuras'),
+                [[{ x: 0, y: 0 },
+                { x: 1, y: 1 }],
+                [{ x: 1, y: 0 },
+                { x: 0, y: 1 }]])),
             this.agregarHerramienta(new figuraSellos('trianguloSellos', this.obtenerCategoria('figuras'),
-                [{ x: 0, y: 1 },
+                [[{ x: 0, y: 1 },
                 { x: 1, y: 1 },
-                { x: 0.5, y: 0 }])),
+                { x: 0.5, y: 0 },
+                { x: 0, y: 1 },]])),
             this.agregarHerramienta(new figuraSellos('rectanguloSello', this.obtenerCategoria('figuras'),
-                [{ x: 0, y: 0 },
+                [[{ x: 0, y: 0 },
                 { x: 0, y: 1 },
                 { x: 1, y: 1 },
-                { x: 1, y: 0 }])),
+                { x: 1, y: 0 },
+                { x: 0, y: 0 },]])),
             this.agregarHerramienta(new figuraSellos('pentagonoSello', this.obtenerCategoria('figuras'),
-                [{ x: 0.8, y: 1 },
+                [[{ x: 0.8, y: 1 },
                 { x: 0.2, y: 1 },
                 { x: 0, y: 0.4 },
                 { x: 0.5, y: 0 },
-                { x: 1, y: 0.4 },])),
-            this.agregarHerramienta(new figuraSellos('flechaDerecha', this.obtenerCategoria('figuras'),
-                [{ x: 0, y: 0.25 },
+                { x: 1, y: 0.4 },
+                { x: 0.8, y: 1 },]])),
+            this.agregarHerramienta(new figuraSellos('flechaHorizontal', this.obtenerCategoria('figuras'),
+                [[{ x: 0, y: 0.25 },
                 { x: 0.5, y: 0.25 },
                 { x: 0.5, y: 0 },
                 { x: 1, y: 0.5 },
                 { x: 0.5, y: 1 },
                 { x: 0.5, y: 0.75 },
-                { x: 0, y: 0.75 }])),
-            this.agregarHerramienta(new figuraSellos('estrella', this.obtenerCategoria('figuras'),
-                [{ x: 0.500, y: 0.000 },
+                { x: 0, y: 0.75 },
+                { x: 0, y: 0.25 },]])),
+            this.agregarHerramienta(new figuraSellos('estrellaSellos', this.obtenerCategoria('figuras'),
+                [[{ x: 0.500, y: 0.000 },
                 { x: 0.618, y: 0.363 },
                 { x: 0.976, y: 0.363 },
                 { x: 0.685, y: 0.575 },
@@ -1480,7 +1494,41 @@ const pintor = {
                 { x: 0.315, y: 0.575 },
                 { x: 0.024, y: 0.363 },
                 { x: 0.382, y: 0.363 },
-                ])),
+                { x: 0.500, y: 0.000 },
+                ]])),
+            this.agregarHerramienta(new figuraSellos('lineaSello', this.obtenerCategoria('figuras'),
+                [[{ x: 0, y: 0 },
+                { x: 1, y: 1 }]])),
+            this.agregarHerramienta(new figuraSellos('crepperSello', this.obtenerCategoria('figuras'),
+                [[{ x: 0, y: 0 },
+                { x: 1, y: 0 },
+                { x: 1, y: 1 },
+                { x: 0, y: 1 },
+                { x: 0, y: 0 }],
+                [{ x: 0.2, y: 0.2 },
+                { x: 0.4, y: 0.2 },
+                { x: 0.4, y: 0.4 },
+                { x: 0.2, y: 0.4 },
+                { x: 0.2, y: 0.2 }],
+                [{ x: 0.6, y: 0.2 },
+                { x: 0.8, y: 0.2 },
+                { x: 0.8, y: 0.4 },
+                { x: 0.6, y: 0.4 },
+                { x: 0.6, y: 0.2 }],
+                [{ x: 0.4, y: 0.4 },
+                { x: 0.6, y: 0.4 },
+                { x: 0.6, y: 0.5 },
+                { x: 0.7, y: 0.5 },
+                { x: 0.7, y: 0.8 },
+                { x: 0.6, y: 0.8 },
+                { x: 0.6, y: 0.7 },
+                { x: 0.4, y: 0.7 },
+                { x: 0.4, y: 0.8 },
+                { x: 0.3, y: 0.8 },
+                { x: 0.3, y: 0.5 },
+                { x: 0.4, y: 0.5 },
+                { x: 0.4, y: 0.4 },
+                ]])),
         )
     },
     agregarHerramienta(herramienta) {

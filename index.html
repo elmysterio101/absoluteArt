@@ -70,13 +70,21 @@
             <select id="herramientas">
             </select>
 
-            <div id="continuidad">
+            <select id="modoDibujoHerramienta">
+                <option value="borrar">borrar</option>
+                <option value="pintar">pintar</option>
+            </select>
+
+            <div id="continuidad" class="checkboxHerramienta">
                 <p>Continuidad</p>
                 <input type="checkbox" id="continuidadCheckBox">
             </div>
 
+
+
             <button type="button" onclick=" nombreHerramienta = document.getElementById('herramientas').value ;
-                                            nombreSello = document.getElementById('sellos').value ;
+                                            nombreSello = document.getElementById('sellos').value ; modoDibujo
+                                            modoDibujo = document.getElementById('modoDibujoHerramienta').value ;
                                             continuidad = document.getElementById('continuidadCheckBox').checked">
                 seleccionar herramienta</button>
 
@@ -115,16 +123,14 @@
 
                 <div class="rango">
                     <p>opsecu</p>
-                    <input type="range" name="" min="0" value="1" max="1" step="0.01" id="opacidadSecundaria"
-                        oninput="opacidadSecundaria = document.getElementById('opacidadSecundaria').value,
+                    <input type="range" name="" min="0" value="1" max="1" step="0.01" id="opacidadSecundaria" oninput="opacidadSecundaria = document.getElementById('opacidadSecundaria').value,
                                  document.getElementById('cartelOpacSecu').innerHTML = opacidadSecundaria">
                     <p id="cartelOpacSecu">1</p>
                 </div>
 
                 <div class="rango">
                     <p>separac %</p>
-                    <input type="range" name="" min="0" value="1" max="5" step="0.01" id="separacion"
-                        oninput="separacion = document.getElementById('separacion').valueAsNumber,
+                    <input type="range" name="" min="0" value="1" max="5" step="0.01" id="separacion" oninput="separacion = document.getElementById('separacion').valueAsNumber,
                                 document.getElementById('cartelSepar').innerHTML = separacion">
                     <p id="cartelSepar">1</p>
                 </div>

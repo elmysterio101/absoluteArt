@@ -134,7 +134,7 @@ body {
 
 select {
     height: 70%;
-    width: 20vw;
+    width: 12vw;
 }
 
 .color {
@@ -420,7 +420,7 @@ select {
     padding-inline: 1.5vh;
 }
 
-#continuidad{
+.checkboxHerramienta{
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -428,4 +428,10 @@ select {
     row-gap: 20%;
     background-color: green;
     padding: .3vh;
+
+}
+.checkboxHerramienta p{
+    width:11vh;
+    font-size: 2vh;
+    text-align: center;
 }
