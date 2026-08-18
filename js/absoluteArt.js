@@ -701,47 +701,42 @@ class rectanguloSimple extends figura {
         super(nombre, categoria)
     }
 
-    usar({ lienzo, trazo }) { // ({ x1, y1, x2, y2, grosor, r, g, b, a })
+    usar({ lienzo, trazo , lienzoIntermediario}) { // ({ x1, y1, x2, y2, grosor, r, g, b, a })
         if (!this.trazoValido(trazo)) return
-        const borde = trazo.cajaDelimitadora()
-        borde.x += trazo.puntoInicial.x;
-        borde.y += trazo.puntoInicial.y;
-        Object.assign(borde, trazo.rgba[0]);
-        const centro = trazo.cajaDelimitadora()
-        centro.x += trazo.grosor + trazo.puntoInicial.x;
-        centro.y += trazo.grosor + trazo.puntoInicial.y;
-        centro.largo -= trazo.grosor * 2;
-        centro.alto -= trazo.grosor * 2;
-        if (centro.largo > 0 && centro.alto > 0) {
-            Object.assign(centro, trazo.rgba[1]);
-
-            borde.alto -= centro.alto + trazo.grosor
-            lienzo.pintarRectangulo(borde) // ariba
-
-            borde.y += centro.alto + trazo.grosor
-            lienzo.pintarRectangulo(borde) // abajo
-
-            borde.y -= centro.alto
-            borde.largo = trazo.grosor
-            borde.alto = centro.alto
-            lienzo.pintarRectangulo(borde) // izquerda
-
-            borde.x += centro.largo + trazo.grosor
-            lienzo.pintarRectangulo(borde) // derecha
-
-            lienzo.pintarRectangulo(centro)
-        } else {
-            lienzo.pintarRectangulo({
-                x: borde.x,
-                y: borde.y,
-                largo: borde.largo,
-                alto: borde.alto,
-                r: trazo.rgba[0].r,
-                g: trazo.rgba[0].g,
-                b: trazo.rgba[0].b,
-                a: trazo.rgba[0].a
+        const lienzoUsar = lienzoIntermediario.lienzoComun;
+        const caja = trazo.cajaDelimitadora();
+        lienzoUsar.pintarRectangulo({
+            x: trazo.puntoInicial.x + caja.x,
+            y: trazo.puntoInicial.y + caja.y,
+            largo: caja.largo,
+            alto: caja.alto,
+            r: trazo.rgba[0].r,
+            g: trazo.rgba[0].g,
+            b: trazo.rgba[0].b,
+            a: trazo.rgba[0].a,
+        })
+        if (caja.largo > trazo.grosor * 2 && caja.alto > trazo.grosor * 2) {
+            lienzoUsar.limpiarRectangulo({
+                x: trazo.puntoInicial.x + trazo.grosor + caja.x,
+                y: trazo.puntoInicial.y + trazo.grosor + caja.y,
+                largo: caja.largo - trazo.grosor * 2,
+                alto: caja.alto - trazo.grosor * 2,
             })
+
+            if (trazo.rgba[1].a !== 0) {
+                lienzoUsar.pintarRectangulo({
+                    x: trazo.puntoInicial.x + trazo.grosor + caja.x,
+                    y: trazo.puntoInicial.y + trazo.grosor + caja.y,
+                    largo: caja.largo - trazo.grosor * 2,
+                    alto: caja.alto - trazo.grosor * 2,
+                    r: trazo.rgba[1].r,
+                    g: trazo.rgba[1].g,
+                    b: trazo.rgba[1].b,
+                    a: trazo.rgba[1].a,
+                })
+            }
         }
+        lienzo.pegarLienzo({ lienzo: lienzoUsar, x: 0, y: 0, modoPegado: trazo.modoDibujo })
     }
 }
 class elipseSimple extends figura {
