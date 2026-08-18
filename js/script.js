@@ -351,7 +351,10 @@ function listarHerramientas() {
             document.getElementById("sellos").insertAdjacentHTML('beforeend', `<option value="${herramienta.nombre}" >${herramienta.nombre}</option>`);
         else
             document.getElementById("herramientas").insertAdjacentHTML('beforeend', `<option value="${herramienta.nombre}" >${herramienta.nombre}</option>`);
-
+    }
+    const modosDIbujo = Object.keys(canvas.modosPegado)
+    for (const nombre of modosDIbujo) {
+        document.getElementById("modoDibujoHerramienta").insertAdjacentHTML('beforeend', `<option value="${nombre}" >${nombre}</option>`);
     }
 }
 listarHerramientas();
@@ -364,7 +367,7 @@ let grosor = 10;
 let nombreHerramienta = 'lineaSimple';
 let nombreSello = 'selloCircular'
 let continuidad = false;
-let modoDibujo = 'pintar';
+let modoDibujo = 'normal';
 let separacion = 1
 
 function obtenerColores() {
