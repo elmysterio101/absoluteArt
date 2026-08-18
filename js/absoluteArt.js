@@ -701,7 +701,7 @@ class rectanguloSimple extends figura {
         super(nombre, categoria)
     }
 
-    usar({ lienzo, trazo , lienzoIntermediario}) { // ({ x1, y1, x2, y2, grosor, r, g, b, a })
+    usar({ lienzo, trazo, lienzoIntermediario }) { // ({ x1, y1, x2, y2, grosor, r, g, b, a })
         if (!this.trazoValido(trazo)) return
         const lienzoUsar = lienzoIntermediario.lienzoComun;
         const caja = trazo.cajaDelimitadora();
@@ -993,46 +993,50 @@ class pincelSellosSimple extends pincel {
     dibujo(lienzo, trazo) {
         const sello = pintor.obtenerHerramienta(trazo.sello)
         if (!trazo.continuidad) {
-            const infoSeparacion = trazo.ajustarSeparacionTrayecto({ sobrante: trazo.sobrante })
-            if (trazo.sobrante !== undefined) trazo.sobrante = infoSeparacion.sobrante
-            const cordenadas = infoSeparacion.trayectoSeccionado
-
-            for (const cord of cordenadas) {
-                sello.usar({
-                    x: cord.x + trazo.puntoInicial.x,
-                    y: cord.y + trazo.puntoInicial.y,
-                    grosor: trazo.grosor,
-                    r: trazo.rgba[0].r,
-                    g: trazo.rgba[0].g,
-                    b: trazo.rgba[0].b,
-                    a: 1,
-                    lienzo: lienzo
-                })
+            for (let i = 0; i < trazo.trayectos.length; i++) {
+                const infoSeparacion = trazo.ajustarSeparacionTrayecto({ sobrante: trazo.sobrante, trayectoSeparar: i })
+                if (trazo.sobrante !== undefined) trazo.sobrante = infoSeparacion.sobrante
+                const cordenadas = infoSeparacion.trayectoSeccionado
+                for (const cord of cordenadas) {
+                    sello.usar({
+                        x: cord.x + trazo.puntoInicial.x,
+                        y: cord.y + trazo.puntoInicial.y,
+                        grosor: trazo.grosor,
+                        r: trazo.rgba[0].r,
+                        g: trazo.rgba[0].g,
+                        b: trazo.rgba[0].b,
+                        a: 1,
+                        lienzo: lienzo
+                    })
+                }
             }
-
         } else {
-            for (const cord of trazo.trayectos[0]) {
-                sello.usar({
-                    x: cord.x + trazo.puntoInicial.x,
-                    y: cord.y + trazo.puntoInicial.y,
-                    grosor: trazo.grosor,
-                    r: trazo.rgba[0].r,
-                    g: trazo.rgba[0].g,
-                    b: trazo.rgba[0].b,
-                    a: 1,
-                    lienzo: lienzo
-                })
-            }
-            if (sello.conectable) {
-                sello.conectarSellos({
-                    trayecto: trazo.obtenerTrayectosCordsAbsolutas()[0],
-                    grosor: trazo.grosor,
-                    r: trazo.rgba[0].r,
-                    g: trazo.rgba[0].g,
-                    b: trazo.rgba[0].b,
-                    a: 1,
-                    lienzo: lienzo
-                })
+            const cordenadasAbsolutas = trazo.obtenerTrayectosCordsAbsolutas();
+            for (let i = 0; i < trazo.trayectos.length; i++) {
+                for (const cord of trazo.trayectos[i]) {
+                    sello.usar({
+                        x: cord.x + trazo.puntoInicial.x,
+                        y: cord.y + trazo.puntoInicial.y,
+                        grosor: trazo.grosor,
+                        r: trazo.rgba[0].r,
+                        g: trazo.rgba[0].g,
+                        b: trazo.rgba[0].b,
+                        a: 1,
+                        lienzo: lienzo
+                    })
+                }
+
+                if (sello.conectable) {
+                    sello.conectarSellos({
+                        trayecto: cordenadasAbsolutas[i],
+                        grosor: trazo.grosor,
+                        r: trazo.rgba[0].r,
+                        g: trazo.rgba[0].g,
+                        b: trazo.rgba[0].b,
+                        a: 1,
+                        lienzo: lienzo
+                    })
+                }
             }
         }
 
@@ -1040,11 +1044,8 @@ class pincelSellosSimple extends pincel {
 
     usar({ lienzo, lienzoIntermediario, trazo }) {
         if (trazo.rgba[0].a === 0) return
-
         this.dibujo(lienzoIntermediario.lienzoComun, trazo)
-
         lienzo.pegarLienzo({ lienzo: lienzoIntermediario.lienzoComun, x: 0, y: 0, alpha: trazo.rgba[0].a, modoPegado: trazo.modoDibujo })
-
     }
 }
 class poligonoSimple extends figura {
@@ -1120,21 +1121,18 @@ class figuraSellos extends lineaSimple {
     usar({ lienzo, trazo, lienzoIntermediario }) {
         if (!this.trazoValido(trazo)) return
         lienzos.acomodar({ lienzo: lienzoIntermediario.lienzoComunSecundario, alto: lienzo.alto, largo: lienzo.largo })
+
         const clonTrazo = trazo.clonar();
         clonTrazo.herramienta = 'pincelSellosSimple'
         clonTrazo.modoDibujo = 'normal'
         const puntosVertices = this.transformarVerticesPuntos(trazo)
 
-        for (const rgba of clonTrazo.rgba) {
-            rgba.a = 1;
-        }
-
-        for (const vertices of puntosVertices) {
-            clonTrazo.trayectos[0] = vertices;
-            pintor.dibujar(lienzoIntermediario.lienzoComunSecundario, clonTrazo)
-        }
+        clonTrazo.trayectos = puntosVertices;
+        console.log(clonTrazo)
+        pintor.dibujar(lienzoIntermediario.lienzoComunSecundario, clonTrazo)
 
         lienzo.pegarLienzo({ lienzo: lienzoIntermediario.lienzoComunSecundario, x: 0, y: 0, alpha: trazo.rgba[0].a, modoPegado: trazo.modoDibujo })
+        
     }
 
     transformarVerticesPuntos(trazo) {
@@ -1156,7 +1154,6 @@ class figuraSellos extends lineaSimple {
             }
             secciones.push(puntos)
         }
-
         return secciones;
     }
 }
@@ -1313,14 +1310,14 @@ class trazo {
         }
         return cordenadas;
     }
-    ajustarSeparacionTrayecto({ separacion, sobrante = 0 } = {}) {
+    ajustarSeparacionTrayecto({ separacion, sobrante = 0, trayectoSeparar = 0 } = {}) {
         let trayectoSeccionado = [];
-        if (sobrante === 0) trayectoSeccionado = [{ x: this.trayectos[0][0].x, y: this.trayectos[0][0].y }];
+        if (sobrante === 0) trayectoSeccionado = [{ x: this.trayectos[trayectoSeparar][0].x, y: this.trayectos[trayectoSeparar][0].y }];
         if (!separacion) separacion = this.grosor * Math.max(this.separacion, this.minimoSeparacion);
 
-        for (let i = 0; i < this.trayectos[0].length - 1; i++) {
-            const origenTramo = this.trayectos[0][i];
-            const finTramo = this.trayectos[0][i + 1];
+        for (let i = 0; i < this.trayectos[trayectoSeparar].length - 1; i++) {
+            const origenTramo = this.trayectos[trayectoSeparar][i];
+            const finTramo = this.trayectos[trayectoSeparar][i + 1];
 
             const largo = finTramo.x - origenTramo.x;
             const alto = finTramo.y - origenTramo.y;
@@ -1738,11 +1735,9 @@ const pintor = {
             this.agregarHerramienta(new elipseSimple('elipseSimple', this.obtenerCategoria('figuras'))),
             this.agregarHerramienta(new circuloSimple('circuloSimple', this.obtenerCategoria('figuras'))),
             this.agregarHerramienta(new poligonoSimple('poligonoSimple', this.obtenerCategoria('figuras'))),
-
             this.agregarHerramienta(new selloCuadrado('selloCuadrado', this.obtenerCategoria('sello'))),
             this.agregarHerramienta(new selloCaligrafia('selloCaligrafia', this.obtenerCategoria('sello'))),
             this.agregarHerramienta(new selloCircular('selloCircular', this.obtenerCategoria('sello'))),
-
             this.agregarHerramienta(new pincelSellosSimple('pincelSellosSimple', this.obtenerCategoria('pinceles'), 4000)),
             this.agregarHerramienta(new figuraSellos('cruzSellos', this.obtenerCategoria('figuras'),
                 [[{ x: 0, y: 0 },
@@ -1822,6 +1817,23 @@ const pintor = {
                 { x: 0.4, y: 0.5 },
                 { x: 0.4, y: 0.4 },
                 ]])),
+            this.agregarHerramienta(new figuraSellos('estresadorGrilla', this.obtenerCategoria('figuras'), [
+                [{ x: 0.00, y: 0 }, { x: 0.00, y: 1 }], [{ x: 0.04, y: 0 }, { x: 0.04, y: 1 }], [{ x: 0.08, y: 0 }, { x: 0.08, y: 1 }], [{ x: 0.12, y: 0 }, { x: 0.12, y: 1 }],
+                [{ x: 0.16, y: 0 }, { x: 0.16, y: 1 }], [{ x: 0.20, y: 0 }, { x: 0.20, y: 1 }], [{ x: 0.24, y: 0 }, { x: 0.24, y: 1 }], [{ x: 0.28, y: 0 }, { x: 0.28, y: 1 }],
+                [{ x: 0.32, y: 0 }, { x: 0.32, y: 1 }], [{ x: 0.36, y: 0 }, { x: 0.36, y: 1 }], [{ x: 0.40, y: 0 }, { x: 0.40, y: 1 }], [{ x: 0.44, y: 0 }, { x: 0.44, y: 1 }],
+                [{ x: 0.48, y: 0 }, { x: 0.48, y: 1 }], [{ x: 0.52, y: 0 }, { x: 0.52, y: 1 }], [{ x: 0.56, y: 0 }, { x: 0.56, y: 1 }], [{ x: 0.60, y: 0 }, { x: 0.60, y: 1 }],
+                [{ x: 0.64, y: 0 }, { x: 0.64, y: 1 }], [{ x: 0.68, y: 0 }, { x: 0.68, y: 1 }], [{ x: 0.72, y: 0 }, { x: 0.72, y: 1 }], [{ x: 0.76, y: 0 }, { x: 0.76, y: 1 }],
+                [{ x: 0.80, y: 0 }, { x: 0.80, y: 1 }], [{ x: 0.84, y: 0 }, { x: 0.84, y: 1 }], [{ x: 0.88, y: 0 }, { x: 0.88, y: 1 }], [{ x: 0.92, y: 0 }, { x: 0.92, y: 1 }],
+                [{ x: 0.96, y: 0 }, { x: 0.96, y: 1 }], [{ x: 1.00, y: 0 }, { x: 1.00, y: 1 }],
+                [{ x: 0, y: 0.00 }, { x: 1, y: 0.00 }], [{ x: 0, y: 0.04 }, { x: 1, y: 0.04 }], [{ x: 0, y: 0.08 }, { x: 1, y: 0.08 }], [{ x: 0, y: 0.12 }, { x: 1, y: 0.12 }],
+                [{ x: 0, y: 0.16 }, { x: 1, y: 0.16 }], [{ x: 0, y: 0.20 }, { x: 1, y: 0.20 }], [{ x: 0, y: 0.24 }, { x: 1, y: 0.24 }], [{ x: 0, y: 0.28 }, { x: 1, y: 0.28 }],
+                [{ x: 0, y: 0.32 }, { x: 1, y: 0.32 }], [{ x: 0, y: 0.36 }, { x: 1, y: 0.36 }], [{ x: 0, y: 0.40 }, { x: 1, y: 0.40 }], [{ x: 0, y: 0.44 }, { x: 1, y: 0.44 }],
+                [{ x: 0, y: 0.48 }, { x: 1, y: 0.48 }], [{ x: 0, y: 0.52 }, { x: 1, y: 0.52 }], [{ x: 0, y: 0.56 }, { x: 1, y: 0.56 }], [{ x: 0, y: 0.60 }, { x: 1, y: 0.60 }],
+                [{ x: 0, y: 0.64 }, { x: 1, y: 0.64 }], [{ x: 0, y: 0.68 }, { x: 1, y: 0.68 }], [{ x: 0, y: 0.72 }, { x: 1, y: 0.72 }], [{ x: 0, y: 0.76 }, { x: 1, y: 0.76 }],
+                [{ x: 0, y: 0.80 }, { x: 1, y: 0.80 }], [{ x: 0, y: 0.84 }, { x: 1, y: 0.84 }], [{ x: 0, y: 0.88 }, { x: 1, y: 0.88 }], [{ x: 0, y: 0.92 }, { x: 1, y: 0.92 }],
+                [{ x: 0, y: 0.96 }, { x: 1, y: 0.96 }], [{ x: 0, y: 1.00 }, { x: 1, y: 1.00 }]])),
+
+
         )
     },
     agregarHerramienta(herramienta) {
