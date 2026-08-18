@@ -7,14 +7,21 @@ function hexToRgb(hex) {
     return { r, g, b }
 }
 const canvasDom = document.getElementById("canvasPrincipal");
-canvasDom.width = mesaTrabajo.confCapas.largoCanvas
-canvasDom.height = mesaTrabajo.confCapas.altoCanvas
+canvasDom.width = mesaTrabajo.confCapas.largoLienzo
+canvasDom.height = mesaTrabajo.confCapas.altoLienzo
 const canvas = new lienzoHtml({ largo: canvasDom.width, alto: canvasDom.height, canvas: canvasDom })
 
 
 const canvasInfo = canvasDom.getBoundingClientRect();
 
 configuracion.configuracionesBase(canvasDom);
+
+
+document.getElementById('representacionGrupo0').querySelector('button').appendChild(mesaTrabajo.capas.lienzo.canvas).id = 'canvasgrupocapa0'
+document.getElementById('representacionCapa1').querySelector('button').appendChild(mesaTrabajo.capaActiva.lienzo.canvas).id = 'canvasindividualcapa0'
+
+
+// <canvas id="canvasindividualcapa0" height="720" width="1280"></canvas>
 
 function revertirTrazo() {
     canvas.limpiar()
@@ -121,6 +128,7 @@ function seleccionarCapa(id, tipo) {
         if (eliminar) {
             eliminar.classList.remove('activo')
         }
+        console.log(('representacionGrupo' + id))
         document.getElementById('representacionGrupo' + id).classList.add('activo')
         abrirConfiguracionCapa()
         if (capaActual.id !== 0) {
@@ -174,7 +182,6 @@ function agregarCapaGrupo(ubicacion, capa) {
                         </label>
                         <button type="button" class="infoPlegado" onclick="seleccionarCapa(${capa.id} , 'grupo')">
                             <p class="nombreCapa"> ${capa.nombre}</p>
-                            <canvas id="canvasgrupocapa${capa.id}" height="${Number(capa.lienzo.alto)}" width="${Number(capa.lienzo.largo)}" "></canvas>
                         </button>
                     </div>
                     <div class="contenido" id="contenido${capa.id}">
@@ -183,7 +190,9 @@ function agregarCapaGrupo(ubicacion, capa) {
 
         `);
 
-    sincronizarCapaCanvasReal(capa)
+    const ubicCanvas = document.getElementById('representacionGrupo' + capa.id).querySelector('button')
+    ubicCanvas.appendChild(capa.lienzo.canvas).id = 'canvasgrupocapa' + capa.id
+
 }
 
 function agregarCapaIndividual(ubicacion, capa) {
@@ -197,14 +206,15 @@ function agregarCapaIndividual(ubicacion, capa) {
                         </label>
                         <button type="button" class="infoPlegado" onclick="seleccionarCapa(${capa.id} , 'individual')">
                             <p class="nombreCapa"> ${capa.nombre}</p>
-                            <canvas id="canvasindividualcapa${capa.id}" height="${Number(capa.lienzo.alto)}" width="${Number(capa.lienzo.largo)}" ></canvas>
                         </button>
                     </div>
                 </div>
 
         `);
 
-    sincronizarCapaCanvasReal(capa)
+    const ubicCanvas = document.getElementById('representacionCapa' + capa.id).querySelector('button')
+    ubicCanvas.appendChild(capa.lienzo.canvas).id = 'canvasindividualcapa' + capa.id
+
 }
 
 function agregarContenidoGrupo(grupo) {
@@ -246,20 +256,8 @@ function eliminarCapaActual() {
         seleccionarCapa(capaActual.id, capaActual.tipoCapa)
         canvas.limpiar()
         mesaTrabajo.capas.renderizar(canvas);
-        sincronizarCapaCanvasReal(capaActual);
     }
 
-}
-
-function sincronizarCapaCanvasReal(capa) {
-    /*
-    const ctxActual = document.getElementById('canvas' + capa.tipoCapa + 'capa' + capa.id).getContext('2d');
-    ctxActual.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-    capa.renderizar(ctxActual)
-    if (capa.capaPadre !== undefined) {
-        sincronizarCapaCanvasReal(capa.capaPadre)
-    }
-        */
 }
 
 function moverCapaLista(capa, movimiento) {
@@ -402,7 +400,7 @@ function obtenerTrazoActual(cordInicial) {
 document.getElementById('cerrarConfCapa').click()
 
 let clickeando = false;
-let ultimoMovimiento = 0;
+
 canvasDom.addEventListener('pointerdown', (e) => {
     if (clickeando) return
     clickeando = true;
@@ -414,10 +412,13 @@ canvasDom.addEventListener('pointerdown', (e) => {
         parametrosTrazo: obtenerTrazoActual(cordenadaActual)
     })
 });
+
+let ultimoMovimiento = 0;
+let ultimoCord = { x: 0, y: 0 };
 canvasDom.addEventListener('pointermove', (e) => {
     let tiempMovimiento = performance.now() - ultimoMovimiento;
     if (ultimoMovimiento = 0) tiempMovimiento = 0
-   // console.log(tiempMovimiento)
+    //   console.log(tiempMovimiento)
     if (clickeando) {
         const cordenadaActual = utiles.adaptarCordCanvas(e.clientX, e.clientY, canvasDom)
         mesaTrabajo.arrastreClick({
@@ -428,7 +429,6 @@ canvasDom.addEventListener('pointermove', (e) => {
     }
     ultimoMovimiento = performance.now()
 });
-
 canvasDom.addEventListener('pointerup', (e) => {
     clickeando = false;
     const cordenadaActual = utiles.adaptarCordCanvas(e.clientX, e.clientY, canvasDom)
@@ -438,5 +438,4 @@ canvasDom.addEventListener('pointerup', (e) => {
         lienzoReal: canvas
     })
 
-    sincronizarCapaCanvasReal(capaActual);
 });

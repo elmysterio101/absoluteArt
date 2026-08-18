@@ -238,8 +238,8 @@ class lienzoHtml extends lienzoBase {
     }
 }
 class capaBase {
-    constructor(capaPadre, idCapa, anchoCanvas, altoCanvas) {
-        this.lienzo = lienzos.obtener({ largo: anchoCanvas, alto: altoCanvas })
+    constructor(capaPadre, idCapa, lienzo) {
+        this.lienzo = lienzo
         this.id = idCapa
         this.capaPadre = capaPadre;
     }
@@ -258,8 +258,8 @@ class capaBase {
     }
 }
 class grupoCapas extends capaBase { // ctx cambiado
-    constructor(capaPadre, idCapa, anchoCanvas, altoCanvas) {
-        super(capaPadre, idCapa, anchoCanvas, altoCanvas)
+    constructor({ capaPadre, idCapa, lienzo }) {
+        super(capaPadre, idCapa, lienzo)
         this.nombre = 'grupo ' + idCapa
     }
     tipoCapa = 'grupo';
@@ -325,25 +325,24 @@ class grupoCapas extends capaBase { // ctx cambiado
             }
         }
     }
-    agregarCapa(confCapas) {
-        const nuevaCapa = new capa(
-            confCapas.capaPadre,
-            confCapas.idCapa,
-            confCapas.largoCanvas,
-            confCapas.altoCanvas,
-            confCapas.frecuenciaCapturas,
-            confCapas.trayectoMuyLargo,
-            confCapas.limiteCapturasHistorial);
+    agregarCapa({ capaPadre, idCapa, lienzo, frecuenciaCapturas, trayectoMuyLargo, limiteCapturasHistorial }) {
+        const nuevaCapa = new capa({
+            capaPadre,
+            idCapa,
+            lienzo,
+            frecuenciaCapturas,
+            trayectoMuyLargo,
+            limiteCapturasHistorial
+        })
         this.contenido.push(nuevaCapa);
         return nuevaCapa;
     }
-    agregarGrupoCapas(confCapas) {
-        const nueveGrupo = new grupoCapas(
-            confCapas.capaPadre,
-            confCapas.idCarpeta,
-            confCapas.anchoCanvas,
-            confCapas.altoCanvas);
-
+    agregarGrupoCapas({ capaPadre, idCapa, lienzo }) {
+        const nueveGrupo = new grupoCapas({
+            capaPadre,
+            idCapa,
+            lienzo
+        });
         this.contenido.push(nueveGrupo);
 
         return nueveGrupo;
@@ -403,11 +402,14 @@ class grupoCapas extends capaBase { // ctx cambiado
         }
     }
     clonar(capaPadre, idCopia) {
-        const clonCapa = new grupoCapas(
+        const clonCapa = new grupoCapas({
             capaPadre,
-            idCopia,
-            this.lienzo.largo,
-            this.lienzo.alto,
+            idCapa: idCopia,
+            lienzo: lienzos.obtener({
+                largo: this.lienzo.largo,
+                alto: this.lienzo.alto
+            }),
+        }
         )
 
         clonCapa.lienzo.pegarLienzo({ lienzo: this.lienzo, y: 0, x: 0 })
@@ -428,13 +430,13 @@ class grupoCapas extends capaBase { // ctx cambiado
 
 }
 class capa extends capaBase {
-    constructor(capaPadre, idCapa, anchoCanvas, altoCanvas, frecuenciaCapturas, trayectoMuyLargo, limiteCapturasHistorial) {
-        super(capaPadre, idCapa, anchoCanvas, altoCanvas)
+    constructor({ capaPadre, idCapa, lienzo, frecuenciaCapturas, trayectoMuyLargo, limiteCapturasHistorial }) {
+        super(capaPadre, idCapa, lienzo)
         this.historial = new historial(
             frecuenciaCapturas,
             trayectoMuyLargo,
             limiteCapturasHistorial,
-            this.lienzo
+            lienzo
         );
         this.nombre = 'capa ' + idCapa
     }
@@ -454,14 +456,17 @@ class capa extends capaBase {
         if (this.historial.recuperarTrazo()) this.capaPadre.preRenderizar()
     }
     clonar(capaPadre, idCopia) {
-        const clonCapa = new capa(
-            capaPadre,
-            idCopia,
-            this.lienzo.largo,
-            this.lienzo.alto,
-            this.historial.frecuenciaTrazos,
-            this.historial.trayectoMuyLargo,
-            this.historial.limiteCapturasHistorial
+        const clonCapa = new capa({
+            capaPadre: capaPadre,
+            idCapa: idCopia,
+            lienzo: lienzos.obtener({
+                largo: this.lienzo.largo,
+                alto: this.lienzo.alto
+            }),
+            frecuenciaCapturas: this.historial.frecuenciaTrazos,
+            trayectoMuyLargo: this.historial.trayectoMuyLargo,
+            limiteCapturasHistorial: this.historial.limiteCapturasHistorial
+        }
         )
 
         const copiaArrays = this.historial.clonarArrays();
@@ -570,13 +575,6 @@ class historial {
         }
         return cantidadTrazos;
     }
-    cargarTodosLosTrazos(lienzo) {
-        if (this.historialTrazos.length > 0) {
-            for (const trazo of this.historialTrazos) {
-                absoluteArt.utiles.pintarTrazo(trazo, lienzo)
-            }
-        }
-    }
     cargarUltimaCaptura() {
         if (this.historialCapturas.length > 0) {
             const captura = this.historialCapturas[this.historialCapturas.length - 1].captura;
@@ -658,7 +656,6 @@ class herramientaDibujo extends herramienta {
         return true;
     }
 }
-
 class figura extends herramientaDibujo {
     constructor(nombre, categoria) {
         super(nombre, categoria)
@@ -1189,7 +1186,7 @@ class figuraSellos extends lineaSimple {
 }
 
 class trazo {
-    constructor({ trayectos, puntoInicial, rgba, grosor, herramienta, sello, continuidad, separacion , modoDibujo}) { // le puedo agregar cosas pero por ahora va este 
+    constructor({ trayectos, puntoInicial, rgba, grosor, herramienta, sello, continuidad, separacion, modoDibujo }) { // le puedo agregar cosas pero por ahora va este 
         this.trayectos = trayectos;
         this.puntoInicial = puntoInicial;
         this.rgba = rgba;
@@ -1200,6 +1197,9 @@ class trazo {
         this.separacion = separacion;
         this.modoDibujo = modoDibujo;
     }
+    minimoSeparacion = 0.01
+    velPxsMin = 300
+    velPxsMax = 3000
     cajaDelimitadora() { // se toma asi pq es cordenada relativa a punto inicial, la cord 0 siempre es 0 0 
         let x1 = 0;
         let y1 = 0;
@@ -1220,7 +1220,7 @@ class trazo {
         }
     }
     cajaDelimitadoraAbsoluta() {
-        const cordenadas = this.obtenerTrayectosPlano()
+        const cordenadas = this.obtenerTrayectoPlano()
         let x1 = 0;
         let y1 = 0;
         let x2 = 0;
@@ -1341,7 +1341,7 @@ class trazo {
     ajustarSeparacionTrayecto({ separacion, sobrante = 0 } = {}) {
         let trayectoSeccionado = [];
         if (sobrante === 0) trayectoSeccionado = [{ x: this.trayectos[0][0].x, y: this.trayectos[0][0].y }];
-        if (!separacion) separacion = this.grosor * Math.max(this.separacion, 0.01);
+        if (!separacion) separacion = this.grosor * Math.max(this.separacion, this.minimoSeparacion);
 
         for (let i = 0; i < this.trayectos[0].length - 1; i++) {
             const origenTramo = this.trayectos[0][i];
@@ -1380,11 +1380,14 @@ class trazo {
     }
 }
 
+
 const lienzos = {
     contadorLienzos: 0,
     obtener({ largo, alto, canvas, muchaLectura }) { // faltan lienzos, por ahora solo el lienzoPlano pero si agregase react native faltaria ese tambien , todos deben tener las mismas funciones , porlomenos las qu ese usen al dibujar
         this.contadorLienzos++;
         console.log('numero de lienzos creados : ', this.contadorLienzos)
+        console.log(' maxima ram utilizada (sin borrar lienzos) : ', ((largo * alto * 8 * this.contadorLienzos) / 1048576).toFixed(2), 'MB')
+        // es por 8 para no meter un * 2 * mas 
         return new lienzoHtml({ largo, alto, canvas, muchaLectura })
     },
     acomodar({ lienzo, alto, largo, limpiar }) {
@@ -1397,6 +1400,326 @@ const lienzos = {
 
     }
 }
+
+const mesaTrabajo = {
+    confCapas: {
+        frecuenciaCapturas: 10,
+        trayectoMuyLargo: 1000,
+        limiteCapturasHistorial: 5,
+        largoLienzo: 1280,
+        altoLienzo: 720
+    },
+    conteoCapas: 0,
+    conteoGrupoCapas: 0,
+    capas: {},
+    capasIndividualesVivas: [],
+    capasGrupoVivas: [],
+    capaActiva: undefined,
+    grupoCapasActiva: undefined,
+
+    trazoTemporal: undefined,
+    trazoGuardar: undefined,
+
+    lienzoPrevio: undefined,
+    lienzoCapaActual: undefined,
+    lienzoPosterior: undefined,
+
+    herramientaActiva: undefined,
+
+    inicioClick({ cordenada, lienzoReal, parametrosTrazo }) {
+        if (this.capasIndividualesVivas.length === 0) return
+        if (this.trazoGuardar)
+            if (!this.herramientaActiva.trazoEnProceso(this.trazoGuardar))
+                if (this.herramientaActiva.trazoValido(this.trazoGuardar))
+                    this.trazoGuardar = undefined;
+
+        if (!this.trazoGuardar) this.trazoGuardar = new trazo(parametrosTrazo)
+
+        this.herramientaActiva = pintor.obtenerHerramienta(this.trazoGuardar.herramienta);
+
+        if (this.herramientaActiva.perteneceCategoria(pintor.obtenerCategoria('pinceles')))
+            lienzos.acomodar({
+                lienzo: pintor.lienzosIntermediarios.lienzoPincel,
+                alto: this.confCapas.altoLienzo,
+                largo: this.confCapas.largoLienzo
+            })
+        this.prepararLienzosSanduich()
+        this.trazoGuardar.agregarTrazo(cordenada)
+        this.trazoTemporal = this.trazoGuardar.clonar()
+        this.trazoTemporal.sobrante = 0;
+    },
+
+    arrastreClick({ cordenada, lienzoReal }) {
+        if (this.capasIndividualesVivas.length === 0) return
+
+        lienzoReal.limpiar()
+        if (this.herramientaActiva.perteneceCategoria(pintor.obtenerCategoria('pinceles'))) {
+            this.trazoGuardar.agregarCordenada(cordenada)
+
+            this.trazoTemporal.trayectos[0][0] = this.trazoGuardar.trayectos[0][this.trazoGuardar.trayectos[0].length - 2]
+            this.trazoTemporal.trayectos[0][1] = this.trazoGuardar.trayectos[0][this.trazoGuardar.trayectos[0].length - 1]
+
+        } else {
+            if (this.trazoTemporal.trayectos[this.trazoTemporal.trayectos.length - 1].length > 1) {
+
+                this.trazoTemporal.remplazarUltimaCordenada(cordenada)
+            } else {
+                this.trazoTemporal.agregarCordenada(cordenada)
+            }
+        }
+
+        this.renderizarTrazo({
+            lienzoReal,
+            trazoTemporal: this.trazoTemporal,
+            trazoReal: this.trazoGuardar,
+        })
+    },
+
+    finClick({ cordenada, lienzoReal }) {
+        if (this.capasIndividualesVivas.length === 0) return
+        if (!this.trazoGuardar) return
+
+        lienzoReal.limpiar()
+        this.trazoGuardar.agregarCordenada(cordenada)
+
+        if (!this.herramientaActiva.trazoEnProceso(this.trazoGuardar)) {
+            if (this.herramientaActiva.trazoValido(this.trazoGuardar)) {
+                this.guardarTrazo();
+                this.capaActiva.capaPadre.preRenderizar();
+            }
+            this.trazoGuardar = undefined;
+            lienzoReal.limpiar();
+            this.capas.renderizar(lienzoReal)
+
+            return;
+        }
+
+        if (this.herramientaActiva.perteneceCategoria(pintor.obtenerCategoria('pinceles'))) {
+            this.renderizarIntermedioPincel({
+                lienzoReal,
+                trazoTemporal: this.trazoTemporal,
+                trazoReal: this.trazoGuardar,
+            })
+        }
+        else {
+            this.renderizarTrazo({ lienzoReal: lienzoReal, trazoTemporal: this.trazoTemporal, trazoReal: this.trazoGuardar })
+        }
+    },
+
+    renderizarTrazo({ lienzoReal, trazoTemporal, trazoReal }) {
+        if (this.herramientaActiva.perteneceCategoria(pintor.obtenerCategoria('pinceles'))) {
+            this.renderizarIntermedioPincel({ lienzoReal, trazoTemporal, trazoReal })
+        } else {
+            this.rendreizarFigura({ lienzoReal, trazo: trazoTemporal })
+        }
+    },
+    renderizarIntermedioPincel({ lienzoReal, trazoTemporal, trazoReal }) {
+        const lienzoPincel = pintor.lienzosIntermediarios.lienzoPincel;
+        lienzos.acomodar({ lienzo: lienzoPincel, alto: lienzoReal.alto, largo: lienzoReal.largo, limpiar: false })
+
+        if (this.lienzoPrevio) lienzoReal.pegarLienzo({ lienzo: this.lienzoPrevio, x: 0, y: 0 })
+        trazoTemporal.rgba[0].a = 1
+        if (this.herramientaActiva.modoPincel === "pintar") {
+            this.capaActiva.renderizar(lienzoReal)
+            pintor.dibujar(lienzoPincel, trazoTemporal)
+            lienzoReal.pegarLienzo({ lienzo: lienzoPincel, y: 0, x: 0, alpha: this.trazoGuardar.rgba[0].a })
+        } else {
+            this.lienzoCapaActual.limpiar()
+            this.capaActiva.renderizar(this.lienzoCapaActual)
+            this.herramientaActiva.dibujo(lienzoPincel, trazoTemporal)
+            this.lienzoCapaActual.restarAlphaLienzo({ lienzo: lienzoPincel, x: 0, y: 0, alpha: this.trazoGuardar.rgba[0].a })
+
+            lienzoReal.pegarLienzo({ lienzo: this.lienzoCapaActual, y: 0, x: 0 })
+        }
+
+        if (this.lienzoPosterior) lienzoReal.pegarLienzo({ lienzo: this.lienzoPosterior, y: 0, x: 0 })
+    },
+
+    rendreizarFigura({ lienzoReal, trazo }) {
+        if (this.lienzoPrevio) lienzoReal.pegarLienzo({ lienzo: this.lienzoPrevio, x: 0, y: 0 })
+        this.capaActiva.renderizar(lienzoReal)
+        pintor.dibujar(lienzoReal, trazo)
+        if (this.lienzoPosterior) lienzoReal.pegarLienzo({ lienzo: this.lienzoPosterior, y: 0, x: 0 })
+    },
+    prepararLienzosSanduich() {
+        const capasDivididas = this.capas.dividirCapas({ capa: this.capaActiva, })
+        if (capasDivididas.anteriores.length > 0) {
+            if (!this.lienzoPrevio) this.lienzoPrevio = lienzos.obtener({ largo: this.confCapas.largoLienzo, alto: this.confCapas.altoLienzo })
+
+            lienzos.acomodar({
+                lienzo: this.lienzoPrevio,
+                alto: this.confCapas.altoLienzo,
+                largo: this.confCapas.largoLienzo
+            })
+
+            for (const actual of capasDivididas.anteriores) {
+                actual.renderizar(this.lienzoPrevio)
+            }
+        } else {
+            if (this.lienzoPrevio) this.lienzoPrevio.limpiar()
+        }
+
+        if (capasDivididas.posteriores.length > 0) {
+            if (!this.lienzoPosterior) this.lienzoPosterior = lienzos.obtener({ largo: this.confCapas.largoLienzo, alto: this.confCapas.altoLienzo })
+            lienzos.acomodar({
+                lienzo: this.lienzoPosterior,
+                alto: this.confCapas.altoLienzo,
+                largo: this.confCapas.largoLienzo
+            })
+            for (const actual of capasDivididas.posteriores) {
+                actual.renderizar(this.lienzoPosterior)
+            }
+        } else {
+            if (this.lienzoPosterior) this.lienzoPosterior.limpiar()
+
+        }
+        if (!this.lienzoCapaActual)
+            this.lienzoCapaActual = lienzos.obtener({ largo: this.confCapas.largoLienzo, alto: this.confCapas.altoLienzo })
+        this.lienzoCapaActual.limpiar()
+        this.capaActiva.renderizar(this.lienzoCapaActual)
+    },
+    clonarCapa(carpeta, capa) { //id carpeta es el padre, capa es la carpeta a clonar
+        if (carpeta.tipoCapa === 'grupo') {
+            if (capa.tipoCapa === 'individual') {
+                this.conteoCapas++
+
+                this.capaActiva = carpeta.clonarCapa(this.conteoCapas, capa);
+                this.capasIndividualesVivas.push(this.capaActiva);
+            } else {
+                if (capa.id !== 0) {
+                    this.conteoGrupoCapas++
+                    this.grupoCapasActiva = carpeta.clonarCapa(this.conteoGrupoCapas, capa);
+                    this.capasGrupoVivas.push(this.grupoCapasActiva);
+                    this.clonarContenido(capa, this.grupoCapasActiva)
+                }
+            }
+        }
+    },
+    clonarContenido(grupo, clon) {
+        for (const capa of grupo.contenido) {
+            this.clonarCapa(clon, capa)
+            if (capa.tipoCapa === 'grupo') {
+                if (capa.contenido.length > 0) {
+                    const padre = clon.contenido[clon.contenido.length - 1]
+                    this.clonarContenido(capa, padre)
+                }
+            }
+        }
+    },
+    agregarCapa(idCapa) {
+        const capaPadre = this.capas.buscarGrupoCapas(idCapa);
+        if (capaPadre) {
+            this.conteoCapas++;
+            this.capaActiva = capaPadre.agregarCapa({
+                capaPadre,
+                idCapa: this.conteoCapas,
+                lienzo: lienzos.obtener({ largo: this.confCapas.largoLienzo, alto: this.confCapas.altoLienzo }),
+                frecuenciaCapturas: this.confCapas.frecuenciaCapturas,
+                trayectoMuyLargo: this.confCapas.trayectoMuyLargo,
+                limiteCapturasHistorial: this.confCapas.limiteCapturasHistorial
+            });
+            this.capasIndividualesVivas.push(this.capaActiva);
+        }
+    },
+    agregarGrupoCapas(idCapa) {
+        const capaPadre = this.capas.buscarGrupoCapas(idCapa);
+        if (capaPadre) {
+            this.conteoGrupoCapas++;
+
+            this.grupoCapasActiva = capaPadre.agregarGrupoCapas({
+                capaPadre,
+                idCapa: this.conteoGrupoCapas,
+                lienzo: lienzos.obtener({ largo: this.confCapas.largoLienzo, alto: this.confCapas.altoLienzo })
+            });
+            this.capasGrupoVivas.push(this.grupoCapasActiva);
+        }
+    },
+    eliminarCapa(id) { // eliminarCapa(id) 
+        const capaPadre = this.capas.buscarCapa(id)?.capaPadre;
+        if (capaPadre !== undefined) {
+            if (capaPadre.eliminarCapa(id)) {
+                let i = 0;
+                let capaVivaEliminada = false;
+                while (i < this.capasIndividualesVivas.length && !capaVivaEliminada) {
+                    if (this.capasIndividualesVivas[i].id === id) {
+                        this.capasIndividualesVivas.splice(i, 1);
+                        capaVivaEliminada = true;
+                    }
+                    i++;
+                }
+                this.capaActiva = this.capasIndividualesVivas[0]
+            }
+        }
+        capaPadre.preRenderizar();
+    },
+    eliminarCapasHijo(capa) {
+        if (capa.contenido.length > 0) {
+            for (let i = capa.contenido.length - 1; i > - 1; i--) {
+                if (capa.contenido[i].tipoCapa === 'grupo') {
+                    this.eliminarGrupoCapas(capa.contenido[i].id)
+                } else {
+                    this.eliminarCapa(capa.contenido[i].id)
+                }
+            }
+        }
+    },
+    eliminarGrupoCapas(id) {
+        const capaEliminar = this.capas.buscarGrupoCapas(id)
+        const capaPadre = capaEliminar?.capaPadre;
+        if (this.capasGrupoVivas.length > 0 && capaPadre !== undefined && id !== 0) {
+            this.eliminarCapasHijo(capaEliminar);
+            if (capaPadre.eliminarGrupoCapas(id)) {
+                let i = 0;
+                let capaVivaEliminada = false;
+                while (i < this.capasGrupoVivas.length && !capaVivaEliminada) {
+                    if (this.capasGrupoVivas[i].id === id) {
+                        this.capasGrupoVivas.splice(i, 1);
+                        capaVivaEliminada = true;
+                    }
+                    i++;
+                }
+                this.grupoCapasActiva = this.capasGrupoVivas[0]
+            }
+        }
+        capaPadre.preRenderizar();
+    },
+    revertirTrazo() {
+        this.capaActiva.revertirTrazo()
+        this.trazoGuardar = undefined
+        this.trazoTemporal = undefined
+    },
+    recuperarTrazo() {
+        this.capaActiva.recuperarTrazo()
+    },
+    renderizar(lienzo) {
+        this.capas.renderizar(lienzo)
+        this.trazoGuardar = undefined
+        this.trazoTemporal = undefined
+    },
+    guardarTrazo() {
+        this.capaActiva.guardarTrazo(this.trazoGuardar)
+
+    },
+    seleccionarCapa(id) {
+        for (const capa of this.capasIndividualesVivas) {
+            if (capa.id === id) {
+                this.capaActiva = capa
+                return capa
+            }
+        }
+        return false
+    },
+    seleccionarGrupoCapas(id) {
+        for (const capa of this.capasGrupoVivas) {
+            if (capa.id === id) {
+                this.grupoCapasActiva = capa
+                return capa
+            }
+        }
+        return false
+    }
+}
+
 const pintor = {
     lienzosIntermediarios: {
         lienzoPincel: lienzos.obtener({ muchaLectura: true, alto: 1, largo: 1 }),
@@ -1561,324 +1884,6 @@ const pintor = {
         }
     }
 }
-const mesaTrabajo = {
-    confCapas: {
-        frecuenciaCapturas: 10,
-        trayectoMuyLargo: 1000,
-        limiteCapturasHistorial: 5,
-        largoCanvas: 1280,
-        altoCanvas: 720
-    },
-    conteoCapas: 0,
-    conteoGrupoCapas: 0,
-    capas: {},
-    capasIndividualesVivas: [],
-    capasGrupoVivas: [],
-    capaActiva: undefined,
-    grupoCapasActiva: undefined,
-
-    trazoTemporal: undefined,
-    trazoGuardar: undefined,
-
-    lienzoPrevio: undefined,
-    lienzoCapaActual: undefined,
-    lienzoPosterior: undefined,
-
-    herramientaActiva: undefined,
-
-    inicioClick({ cordenada, lienzoReal, parametrosTrazo }) {
-        if (this.capasIndividualesVivas.length === 0) return
-        if (this.trazoGuardar)
-            if (!this.herramientaActiva.trazoEnProceso(this.trazoGuardar))
-                if (this.herramientaActiva.trazoValido(this.trazoGuardar))
-                    this.trazoGuardar = undefined;
-
-        if (!this.trazoGuardar) this.trazoGuardar = new trazo(parametrosTrazo)
-
-        this.herramientaActiva = pintor.obtenerHerramienta(this.trazoGuardar.herramienta);
-
-        if (this.herramientaActiva.perteneceCategoria(pintor.obtenerCategoria('pinceles')))
-            lienzos.acomodar({
-                lienzo: pintor.lienzosIntermediarios.lienzoPincel,
-                alto: this.confCapas.altoCanvas,
-                largo: this.confCapas.largoCanvas
-            })
-        this.prepararLienzosSanduich()
-        this.trazoGuardar.agregarTrazo(cordenada)
-        this.trazoTemporal = this.trazoGuardar.clonar()
-        this.trazoTemporal.sobrante = 0;
-    },
-
-    arrastreClick({ cordenada, lienzoReal }) {
-        if (this.capasIndividualesVivas.length === 0) return
-
-        lienzoReal.limpiar()
-        if (this.herramientaActiva.perteneceCategoria(pintor.obtenerCategoria('pinceles'))) {
-            this.trazoGuardar.agregarCordenada(cordenada)
-
-            this.trazoTemporal.trayectos[0][0] = this.trazoGuardar.trayectos[0][this.trazoGuardar.trayectos[0].length - 2]
-            this.trazoTemporal.trayectos[0][1] = this.trazoGuardar.trayectos[0][this.trazoGuardar.trayectos[0].length - 1]
-
-        } else {
-            if (this.trazoTemporal.trayectos[this.trazoTemporal.trayectos.length - 1].length > 1) {
-
-                this.trazoTemporal.remplazarUltimaCordenada(cordenada)
-            } else {
-                this.trazoTemporal.agregarCordenada(cordenada)
-            }
-        }
-
-        this.renderizarTrazo({
-            lienzoReal,
-            trazoTemporal: this.trazoTemporal,
-            trazoReal: this.trazoGuardar,
-        })
-    },
-
-    finClick({ cordenada, lienzoReal }) {
-        if (this.capasIndividualesVivas.length === 0) return
-        if (!this.trazoGuardar) return
-        //if (pintor.lienzosIntermediarios.lienzoPincel) pintor.lienzosIntermediarios.lienzoPincel.limpiar()
-
-        lienzoReal.limpiar()
-        this.trazoGuardar.agregarCordenada(cordenada)
-
-        if (!this.herramientaActiva.trazoEnProceso(this.trazoGuardar)) {
-            if (this.herramientaActiva.trazoValido(this.trazoGuardar)) {
-                this.guardarTrazo();
-                this.capaActiva.capaPadre.preRenderizar();
-            }
-            this.trazoGuardar = undefined;
-            lienzoReal.limpiar();
-            this.capas.renderizar(lienzoReal)
-
-            return;
-        }
-
-        if (this.herramientaActiva.perteneceCategoria(pintor.obtenerCategoria('pinceles'))) {
-            this.renderizarIntermedioPincel({
-                lienzoReal,
-                trazoTemporal: this.trazoTemporal,
-                trazoReal: this.trazoGuardar,
-            })
-        }
-        else {
-            this.renderizarTrazo({ lienzoReal: lienzoReal, trazoTemporal: this.trazoTemporal, trazoReal: this.trazoGuardar })
-        }
-    },
-
-    renderizarTrazo({ lienzoReal, trazoTemporal, trazoReal }) {
-        if (this.herramientaActiva.perteneceCategoria(pintor.obtenerCategoria('pinceles'))) {
-            this.renderizarIntermedioPincel({ lienzoReal, trazoTemporal, trazoReal })
-        } else {
-            this.rendreizarFigura({ lienzoReal, trazo: trazoTemporal })
-        }
-    },
-    renderizarIntermedioPincel({ lienzoReal, trazoTemporal, trazoReal }) {
-        const lienzoPincel = pintor.lienzosIntermediarios.lienzoPincel;
-        lienzos.acomodar({ lienzo: lienzoPincel, alto: lienzoReal.alto, largo: lienzoReal.largo, limpiar: false })
-
-        if (this.lienzoPrevio) lienzoReal.pegarLienzo({ lienzo: this.lienzoPrevio, x: 0, y: 0 })
-        trazoTemporal.rgba[0].a = 1
-        if (this.herramientaActiva.modoPincel === "pintar") {
-            this.capaActiva.renderizar(lienzoReal)
-            pintor.dibujar(lienzoPincel, trazoTemporal)
-            lienzoReal.pegarLienzo({ lienzo: lienzoPincel, y: 0, x: 0, alpha: this.trazoGuardar.rgba[0].a })
-        } else {
-            this.lienzoCapaActual.limpiar()
-            this.capaActiva.renderizar(this.lienzoCapaActual)
-            this.herramientaActiva.dibujo(lienzoPincel, trazoTemporal)
-            this.lienzoCapaActual.restarAlphaLienzo({ lienzo: lienzoPincel, x: 0, y: 0, alpha: this.trazoGuardar.rgba[0].a })
-
-            lienzoReal.pegarLienzo({ lienzo: this.lienzoCapaActual, y: 0, x: 0 })
-        }
-
-        if (this.lienzoPosterior) lienzoReal.pegarLienzo({ lienzo: this.lienzoPosterior, y: 0, x: 0 })
-    },
-
-    rendreizarFigura({ lienzoReal, trazo }) {
-        if (this.lienzoPrevio) lienzoReal.pegarLienzo({ lienzo: this.lienzoPrevio, x: 0, y: 0 })
-        this.capaActiva.renderizar(lienzoReal)
-        pintor.dibujar(lienzoReal, trazo)
-        if (this.lienzoPosterior) lienzoReal.pegarLienzo({ lienzo: this.lienzoPosterior, y: 0, x: 0 })
-    },
-    prepararLienzosSanduich() {
-        const capasDivididas = this.capas.dividirCapas({ capa: this.capaActiva, })
-        if (capasDivididas.anteriores.length > 0) {
-            if (!this.lienzoPrevio) this.lienzoPrevio = lienzos.obtener({ largo: this.confCapas.largoCanvas, alto: this.confCapas.altoCanvas })
-
-            lienzos.acomodar({
-                lienzo: this.lienzoPrevio,
-                alto: this.confCapas.altoCanvas,
-                largo: this.confCapas.largoCanvas
-            })
-
-            for (const actual of capasDivididas.anteriores) {
-                actual.renderizar(this.lienzoPrevio)
-            }
-        } else {
-            if (this.lienzoPrevio) this.lienzoPrevio.limpiar()
-        }
-
-        if (capasDivididas.posteriores.length > 0) {
-            if (!this.lienzoPosterior) this.lienzoPosterior = lienzos.obtener({ largo: this.confCapas.largoCanvas, alto: this.confCapas.altoCanvas })
-            lienzos.acomodar({
-                lienzo: this.lienzoPosterior,
-                alto: this.confCapas.altoCanvas,
-                largo: this.confCapas.largoCanvas
-            })
-            for (const actual of capasDivididas.posteriores) {
-                actual.renderizar(this.lienzoPosterior)
-            }
-        } else {
-            if (this.lienzoPosterior) this.lienzoPosterior.limpiar()
-
-        }
-        if (!this.lienzoCapaActual)
-            this.lienzoCapaActual = lienzos.obtener({ largo: this.confCapas.largoCanvas, alto: this.confCapas.altoCanvas })
-        this.lienzoCapaActual.limpiar()
-        this.capaActiva.renderizar(this.lienzoCapaActual)
-    },
-    clonarCapa(carpeta, capa) { //id carpeta es el padre, capa es la carpeta a clonar
-        if (carpeta.tipoCapa === 'grupo') {
-            if (capa.tipoCapa === 'individual') {
-                this.conteoCapas++
-
-                this.capaActiva = carpeta.clonarCapa(this.conteoCapas, capa);
-                this.capasIndividualesVivas.push(this.capaActiva);
-            } else {
-                if (capa.id !== 0) {
-                    this.conteoGrupoCapas++
-                    this.grupoCapasActiva = carpeta.clonarCapa(this.conteoGrupoCapas, capa);
-                    this.capasGrupoVivas.push(this.grupoCapasActiva);
-                    this.clonarContenido(capa, this.grupoCapasActiva)
-                }
-            }
-        }
-    },
-    clonarContenido(grupo, clon) {
-        for (const capa of grupo.contenido) {
-            this.clonarCapa(clon, capa)
-            if (capa.tipoCapa === 'grupo') {
-                if (capa.contenido.length > 0) {
-                    const padre = clon.contenido[clon.contenido.length - 1]
-                    this.clonarContenido(capa, padre)
-                }
-            }
-        }
-    },
-    agregarCapa(idCarpeta) {
-        const capaPadre = this.capas.buscarGrupoCapas(idCarpeta);
-        if (capaPadre) {
-            this.conteoCapas++;
-
-            const confCapa = this.confCapas;
-            confCapa.capaPadre = capaPadre;
-            confCapa.idCapa = this.conteoCapas;
-
-            this.capaActiva = capaPadre.agregarCapa(confCapa);
-            this.capasIndividualesVivas.push(this.capaActiva);
-        }
-    },
-    agregarGrupoCapas(idCarpeta) {
-        const capaPadre = this.capas.buscarGrupoCapas(idCarpeta);
-        if (capaPadre) {
-            this.conteoGrupoCapas++;
-
-            const confCapa = this.confCapas;
-            confCapa.capaPadre = capaPadre;
-            confCapa.idCarpeta = this.conteoGrupoCapas;
-
-            this.grupoCapasActiva = capaPadre.agregarGrupoCapas(confCapa);
-            this.capasGrupoVivas.push(this.grupoCapasActiva);
-        }
-    },
-    eliminarCapa(id) { // eliminarCapa(id) 
-        const capaPadre = this.capas.buscarCapa(id)?.capaPadre;
-        if (capaPadre !== undefined) {
-            if (capaPadre.eliminarCapa(id)) {
-                let i = 0;
-                let capaVivaEliminada = false;
-                while (i < this.capasIndividualesVivas.length && !capaVivaEliminada) {
-                    if (this.capasIndividualesVivas[i].id === id) {
-                        this.capasIndividualesVivas.splice(i, 1);
-                        capaVivaEliminada = true;
-                    }
-                    i++;
-                }
-                this.capaActiva = this.capasIndividualesVivas[0]
-            }
-        }
-        capaPadre.preRenderizar();
-    },
-    eliminarCapasHijo(capa) {
-        if (capa.contenido.length > 0) {
-            for (let i = capa.contenido.length - 1; i > - 1; i--) {
-                if (capa.contenido[i].tipoCapa === 'grupo') {
-                    this.eliminarGrupoCapas(capa.contenido[i].id)
-                } else {
-                    this.eliminarCapa(capa.contenido[i].id)
-                }
-            }
-        }
-    },
-    eliminarGrupoCapas(id) {
-        const capaEliminar = this.capas.buscarGrupoCapas(id)
-        const capaPadre = capaEliminar?.capaPadre;
-        if (this.capasGrupoVivas.length > 0 && capaPadre !== undefined && id !== 0) {
-            this.eliminarCapasHijo(capaEliminar);
-            if (capaPadre.eliminarGrupoCapas(id)) {
-                let i = 0;
-                let capaVivaEliminada = false;
-                while (i < this.capasGrupoVivas.length && !capaVivaEliminada) {
-                    if (this.capasGrupoVivas[i].id === id) {
-                        this.capasGrupoVivas.splice(i, 1);
-                        capaVivaEliminada = true;
-                    }
-                    i++;
-                }
-                this.grupoCapasActiva = this.capasGrupoVivas[0]
-            }
-        }
-        capaPadre.preRenderizar();
-    },
-
-    revertirTrazo() {
-        this.capaActiva.revertirTrazo()
-        this.trazoGuardar = undefined
-        this.trazoTemporal = undefined
-    },
-    recuperarTrazo() {
-        this.capaActiva.recuperarTrazo()
-    },
-    renderizar(lienzo) {
-        this.capas.renderizar(lienzo)
-        this.trazoGuardar = undefined
-        this.trazoTemporal = undefined
-    },
-    guardarTrazo() {
-        this.capaActiva.guardarTrazo(this.trazoGuardar)
-
-    },
-    seleccionarCapa(id) {
-        for (const capa of this.capasIndividualesVivas) {
-            if (capa.id === id) {
-                this.capaActiva = capa
-                return capa
-            }
-        }
-        return false
-    },
-    seleccionarGrupoCapas(id) {
-        for (const capa of this.capasGrupoVivas) {
-            if (capa.id === id) {
-                this.capaActiva = capa
-                return capa
-            }
-        }
-        return false
-    }
-}
 const utiles = {
     datosCuadrilatero(trayecto) {
         let x = 0;
@@ -1949,7 +1954,6 @@ const utiles = {
         return { x: cordX - infoObjeto.x, y: cordY - infoObjeto.y };
     },
 }
-
 const configuracion = {
     configurarEsteticaCanvas(canvas) { // se lo pedi a gemini
         const ctx = canvas.getContext('2d');
@@ -1965,18 +1969,16 @@ const configuracion = {
     },
     agregarCapaBase() {
         const lienzo = mesaTrabajo;
-        lienzo.capas = new grupoCapas(undefined, lienzo.conteoGrupoCapas, lienzo.confCapas.largoCanvas, lienzo.confCapas.altoCanvas);
+        lienzo.capas = new grupoCapas({
+            capaPadre: undefined,
+            idCapa: 0,
+            lienzo: lienzos.obtener({
+                largo: lienzo.confCapas.largoLienzo,
+                alto: lienzo.confCapas.altoLienzo
+            })
+        });
         lienzo.grupoCapasActiva = lienzo.capas;
-        lienzo.capaActiva = new capa(lienzo.capas,
-            lienzo.conteoCapas,
-            lienzo.confCapas.largoCanvas,
-            lienzo.confCapas.altoCanvas,
-            lienzo.confCapas.frecuenciaCapturas,
-            lienzo.confCapas.trayectoMuyLargo,
-            lienzo.confCapas.limiteCapturasHistorial,
-        )
-        lienzo.capas.contenido.push(lienzo.capaActiva)
-        lienzo.capasIndividualesVivas.push(lienzo.capaActiva)
+        lienzo.agregarCapa(0)
     },
 
     configuracionesBase(canvas) {
